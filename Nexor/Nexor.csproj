@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UseWPF>true</UseWPF>
+		<ApplicationIcon>nexor.ico</ApplicationIcon>
+		<AssemblyName>Nexor</AssemblyName>
+		<RootNamespace>Nexor</RootNamespace>
+		<Version>1.0.0</Version>
+		<Authors>Nexor Team</Authors>
+		<Product>Nexor PC Optimizer</Product>
+		<Description>Advanced PC Optimization Tool</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="System.Diagnostics.PerformanceCounter" Version="8.0.0" />
+		<PackageReference Include="System.Management" Version="8.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Resource Include="nexor.ico" />
+	</ItemGroup>
+</Project>

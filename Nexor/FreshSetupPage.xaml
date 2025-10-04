@@ -1,0 +1,490 @@
+﻿<UserControl x:Class="Nexor.FreshSetupPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#0F0F0F">
+
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="CardBg" Color="#222222"/>
+        <SolidColorBrush x:Key="AccentBlue" Color="#0078D4"/>
+        <SolidColorBrush x:Key="AccentGreen" Color="#10B981"/>
+        <SolidColorBrush x:Key="AccentOrange" Color="#F59E0B"/>
+        <SolidColorBrush x:Key="TextPrimary" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#A0A0A0"/>
+
+        <!-- Animação de Fade In -->
+        <Storyboard x:Key="FadeInAnimation">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                           From="0" To="1" Duration="0:0:0.5"
+                           AutoReverse="False"/>
+        </Storyboard>
+
+        <!-- Animação de Slide In -->
+        <Storyboard x:Key="SlideInAnimation">
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                           From="50" To="0" Duration="0:0:0.4">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                           From="0" To="1" Duration="0:0:0.4"/>
+        </Storyboard>
+
+        <!-- Animação de Pulse -->
+        <Storyboard x:Key="PulseAnimation" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                           From="1" To="1.05" Duration="0:0:1" AutoReverse="True">
+                <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                           From="1" To="1.05" Duration="0:0:1" AutoReverse="True">
+                <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+
+        <Style x:Key="StepCard" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CardBg}"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Margin" Value="0,0,0,15"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <TranslateTransform X="0" Y="0"/>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <EventTrigger RoutedEvent="Loaded">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                           From="50" To="0" Duration="0:0:0.5">
+                                <DoubleAnimation.EasingFunction>
+                                    <CubicEase EasingMode="EaseOut"/>
+                                </DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                           From="0" To="1" Duration="0:0:0.5"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Trigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                               To="-5" Duration="0:0:0.2">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.EnterActions>
+                    <Trigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                               To="0" Duration="0:0:0.2">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.ExitActions>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource AccentBlue}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="20,12"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX="1" ScaleY="1"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="8" 
+                                Padding="{TemplateBinding Padding}"
+                                x:Name="border">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                           To="1.05" Duration="0:0:0.15"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                           To="1.05" Duration="0:0:0.15"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                           To="1" Duration="0:0:0.15"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                           To="1" Duration="0:0:0.15"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Estilo para o círculo de progresso -->
+        <Style x:Key="ProgressCircle" TargetType="Border">
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <RotateTransform Angle="0"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Cabeçalho -->
+        <StackPanel Grid.Row="0" Opacity="0">
+            <StackPanel.Triggers>
+                <EventTrigger RoutedEvent="Loaded">
+                    <BeginStoryboard Storyboard="{StaticResource FadeInAnimation}"/>
+                </EventTrigger>
+            </StackPanel.Triggers>
+
+            <TextBlock x:Name="TxtTitle" Text="Configuração Inicial Windows 11" 
+                       FontSize="28" FontWeight="Bold" 
+                       Foreground="{StaticResource TextPrimary}"/>
+            <TextBlock x:Name="TxtSubtitle" 
+                       Text="Otimize o seu sistema após instalação limpa" 
+                       FontSize="14" 
+                       Foreground="{StaticResource TextSecondary}" 
+                       Margin="0,5,0,20"/>
+        </StackPanel>
+
+        <!-- Conteúdo -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
+            <StackPanel>
+
+                <!-- Status geral -->
+                <Border Style="{StaticResource StepCard}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel>
+                            <TextBlock x:Name="TxtStatusTitle" Text="Estado do Sistema" 
+                                       FontSize="20" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtStatusDesc" 
+                                       Text="Pronto para configuração inicial" 
+                                       FontSize="14" 
+                                       Foreground="{StaticResource TextSecondary}"
+                                       Margin="0,5,0,0"/>
+                            <ProgressBar x:Name="ProgressBarMain" 
+                                        Height="4" 
+                                        Margin="0,10,0,0"
+                                        Background="#333333"
+                                        Foreground="{StaticResource AccentBlue}"
+                                        Maximum="100"
+                                        Value="0"/>
+                        </StackPanel>
+
+                        <Border Grid.Column="1" 
+                                x:Name="ProgressCircleBorder"
+                                Background="{StaticResource AccentBlue}" 
+                                CornerRadius="50" 
+                                Width="70" Height="70"
+                                RenderTransformOrigin="0.5,0.5">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="1"/>
+                            </Border.RenderTransform>
+                            <TextBlock x:Name="TxtProgress" Text="0%" 
+                                       FontSize="20" FontWeight="Bold" 
+                                       Foreground="White" 
+                                       HorizontalAlignment="Center" 
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Botão executar tudo -->
+                <Button x:Name="BtnRunAll" 
+                        Content="🚀 Executar Configuração Completa" 
+                        Style="{StaticResource ActionButton}"
+                        Background="{StaticResource AccentGreen}"
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Margin="0,0,0,30"
+                        Click="BtnRunAll_Click"/>
+
+                <!-- Passo 1: Windows Update -->
+                <Border x:Name="Step1Card" Style="{StaticResource StepCard}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border x:Name="Step1Badge" 
+                                    Background="{StaticResource AccentBlue}" 
+                                    CornerRadius="8" 
+                                    Width="40" Height="40"
+                                    VerticalAlignment="Top">
+                                <TextBlock Text="1" FontSize="20" FontWeight="Bold" 
+                                           Foreground="White" 
+                                           HorizontalAlignment="Center" 
+                                           VerticalAlignment="Center"/>
+                            </Border>
+
+                            <StackPanel Grid.Column="1" Margin="15,0,0,0">
+                                <TextBlock x:Name="TxtStep1Title" 
+                                           Text="Atualizar Windows" 
+                                           FontSize="18" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextPrimary}"/>
+                                <TextBlock x:Name="TxtStep1Desc" 
+                                           Text="Instalar todas as atualizações disponíveis do Windows 11" 
+                                           FontSize="14" 
+                                           Foreground="{StaticResource TextSecondary}"
+                                           Margin="0,5,0,10"
+                                           TextWrapping="Wrap"/>
+                                <TextBlock x:Name="TxtStep1Status" 
+                                           Text="⏳ Pendente" 
+                                           FontSize="13" 
+                                           Foreground="{StaticResource AccentOrange}"/>
+                                <ProgressBar x:Name="ProgressStep1" 
+                                            Height="3" 
+                                            Margin="0,8,0,0"
+                                            Background="#333333"
+                                            Foreground="{StaticResource AccentBlue}"
+                                            Maximum="100"
+                                            Value="0"
+                                            Visibility="Collapsed"/>
+                            </StackPanel>
+
+                            <Button Grid.Column="2" 
+                                    x:Name="BtnStep1"
+                                    Content="Iniciar" 
+                                    Style="{StaticResource ActionButton}"
+                                    Click="BtnStep1_Click"
+                                    Visibility="Collapsed"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Passo 2: Drivers -->
+                <Border x:Name="Step2Card" Style="{StaticResource StepCard}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border x:Name="Step2Badge"
+                                    Background="{StaticResource AccentBlue}" 
+                                    CornerRadius="8" 
+                                    Width="40" Height="40"
+                                    VerticalAlignment="Top">
+                                <TextBlock Text="2" FontSize="20" FontWeight="Bold" 
+                                           Foreground="White" 
+                                           HorizontalAlignment="Center" 
+                                           VerticalAlignment="Center"/>
+                            </Border>
+
+                            <StackPanel Grid.Column="1" Margin="15,0,0,0">
+                                <TextBlock x:Name="TxtStep2Title" 
+                                           Text="Atualizar Drivers" 
+                                           FontSize="18" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextPrimary}"/>
+                                <TextBlock x:Name="TxtStep2Desc" 
+                                           Text="Verificar e instalar drivers mais recentes para hardware" 
+                                           FontSize="14" 
+                                           Foreground="{StaticResource TextSecondary}"
+                                           Margin="0,5,0,10"
+                                           TextWrapping="Wrap"/>
+                                <TextBlock x:Name="TxtStep2Status" 
+                                           Text="⏳ Pendente" 
+                                           FontSize="13" 
+                                           Foreground="{StaticResource AccentOrange}"/>
+                                <ProgressBar x:Name="ProgressStep2" 
+                                            Height="3" 
+                                            Margin="0,8,0,0"
+                                            Background="#333333"
+                                            Foreground="{StaticResource AccentBlue}"
+                                            Maximum="100"
+                                            Value="0"
+                                            Visibility="Collapsed"/>
+                            </StackPanel>
+
+                            <Button Grid.Column="2" 
+                                    x:Name="BtnStep2"
+                                    Content="Iniciar" 
+                                    Style="{StaticResource ActionButton}"
+                                    Click="BtnStep2_Click"
+                                    Visibility="Collapsed"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Passo 3: Limpar Caches -->
+                <Border x:Name="Step3Card" Style="{StaticResource StepCard}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border x:Name="Step3Badge"
+                                    Background="{StaticResource AccentGreen}" 
+                                    CornerRadius="8" 
+                                    Width="40" Height="40"
+                                    VerticalAlignment="Top">
+                                <TextBlock Text="3" FontSize="20" FontWeight="Bold" 
+                                           Foreground="White" 
+                                           HorizontalAlignment="Center" 
+                                           VerticalAlignment="Center"/>
+                            </Border>
+
+                            <StackPanel Grid.Column="1" Margin="15,0,0,0">
+                                <TextBlock x:Name="TxtStep3Title" 
+                                           Text="Limpar Sistema" 
+                                           FontSize="18" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextPrimary}"/>
+                                <TextBlock x:Name="TxtStep3Desc" 
+                                           Text="Remover ficheiros temporários, caches e versões antigas do Windows" 
+                                           FontSize="14" 
+                                           Foreground="{StaticResource TextSecondary}"
+                                           Margin="0,5,0,10"
+                                           TextWrapping="Wrap"/>
+                                <StackPanel Margin="0,5,0,0">
+                                    <TextBlock Text="• Temp files" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+                                    <TextBlock Text="• Windows Update cache" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+                                    <TextBlock Text="• Versões antigas do Windows" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+                                </StackPanel>
+                                <TextBlock x:Name="TxtStep3Status" 
+                                           Text="⏳ Pendente" 
+                                           FontSize="13" 
+                                           Foreground="{StaticResource AccentOrange}"
+                                           Margin="0,10,0,0"/>
+                                <ProgressBar x:Name="ProgressStep3" 
+                                            Height="3" 
+                                            Margin="0,8,0,0"
+                                            Background="#333333"
+                                            Foreground="{StaticResource AccentGreen}"
+                                            Maximum="100"
+                                            Value="0"
+                                            Visibility="Collapsed"/>
+                            </StackPanel>
+
+                            <Button Grid.Column="2" 
+                                    x:Name="BtnStep3"
+                                    Content="Iniciar" 
+                                    Style="{StaticResource ActionButton}"
+                                    Background="{StaticResource AccentGreen}"
+                                    Click="BtnStep3_Click"
+                                    Visibility="Collapsed"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Log em tempo real -->
+                <Border x:Name="LogCard" 
+                        Background="#1A1A1A" 
+                        CornerRadius="12" 
+                        Padding="20" 
+                        Margin="0,0,0,15"
+                        Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock Text="📋 Log de Atividades" 
+                                   FontSize="16" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimary}"
+                                   Margin="0,0,0,10"/>
+                        <ScrollViewer Height="150" VerticalScrollBarVisibility="Auto">
+                            <TextBlock x:Name="TxtLog" 
+                                       FontSize="12" 
+                                       FontFamily="Consolas"
+                                       Foreground="{StaticResource TextSecondary}"
+                                       TextWrapping="Wrap"/>
+                        </ScrollViewer>
+                    </StackPanel>
+                </Border>
+
+                <!-- Informação adicional -->
+                <Border Background="#1A1A1A" 
+                        CornerRadius="12" 
+                        Padding="20" 
+                        Margin="0,10,0,0">
+                    <StackPanel>
+                        <TextBlock x:Name="TxtInfoTitle" 
+                                   Text="ℹ️ Informação Importante" 
+                                   FontSize="16" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimary}"
+                                   Margin="0,0,0,10"/>
+                        <TextBlock x:Name="TxtInfo1" 
+                                   Text="• Este processo pode demorar 20-40 minutos dependendo da velocidade da internet" 
+                                   FontSize="13" 
+                                   Foreground="{StaticResource TextSecondary}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,3"/>
+                        <TextBlock x:Name="TxtInfo2" 
+                                   Text="• É recomendado executar como Administrador" 
+                                   FontSize="13" 
+                                   Foreground="{StaticResource TextSecondary}"
+                                   Margin="0,3"/>
+                        <TextBlock x:Name="TxtInfo3" 
+                                   Text="• O sistema pode reiniciar durante o processo de atualização" 
+                                   FontSize="13" 
+                                   Foreground="{StaticResource TextSecondary}"
+                                   Margin="0,3"/>
+                        <TextBlock x:Name="TxtInfo4" 
+                                   Text="• Não interrompa o processo uma vez iniciado" 
+                                   FontSize="13" 
+                                   Foreground="{StaticResource AccentOrange}"
+                                   Margin="0,3"
+                                   FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

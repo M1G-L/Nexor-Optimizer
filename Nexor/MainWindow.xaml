@@ -1,0 +1,664 @@
+﻿<Window x:Class="Nexor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Nexor" Height="700" Width="1100"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="CanResize">
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="PrimaryBg" Color="#0F0F0F"/>
+        <SolidColorBrush x:Key="SecondaryBg" Color="#1A1A1A"/>
+        <SolidColorBrush x:Key="CardBg" Color="#1C1C1C"/>
+        <SolidColorBrush x:Key="AccentBlue" Color="#3B82F6"/>
+        <SolidColorBrush x:Key="AccentGreen" Color="#10B981"/>
+        <SolidColorBrush x:Key="AccentOrange" Color="#F59E0B"/>
+        <SolidColorBrush x:Key="AccentRed" Color="#EF4444"/>
+        <SolidColorBrush x:Key="AccentPurple" Color="#8B5CF6"/>
+        <SolidColorBrush x:Key="AccentCyan" Color="#06B6D4"/>
+        <SolidColorBrush x:Key="AccentPink" Color="#EC4899"/>
+        <SolidColorBrush x:Key="TextPrimary" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#9CA3AF"/>
+
+        <Storyboard x:Key="FadeIn">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                           From="0" To="1" Duration="0:0:0.4"/>
+        </Storyboard>
+
+        <Storyboard x:Key="ScaleIn">
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                           From="0.95" To="1" Duration="0:0:0.3">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                           From="0.95" To="1" Duration="0:0:0.3">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                           From="0" To="1" Duration="0:0:0.3"/>
+        </Storyboard>
+
+        <Style x:Key="ActionCard" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CardBg}"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Padding" Value="24"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <TransformGroup>
+                        <ScaleTransform ScaleX="1" ScaleY="1"/>
+                        <TranslateTransform Y="0"/>
+                    </TransformGroup>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <EventTrigger RoutedEvent="Loaded">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                           From="0" To="1" Duration="0:0:0.5"/>
+                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(TranslateTransform.Y)"
+                                           From="20" To="0" Duration="0:0:0.5">
+                                <DoubleAnimation.EasingFunction>
+                                    <CubicEase EasingMode="EaseOut"/>
+                                </DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Trigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleX)"
+                                               To="1.02" Duration="0:0:0.2">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleY)"
+                                               To="1.02" Duration="0:0:0.2">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(TranslateTransform.Y)"
+                                               To="-5" Duration="0:0:0.2">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.EnterActions>
+                    <Trigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleX)"
+                                               To="1" Duration="0:0:0.2">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleY)"
+                                               To="1" Duration="0:0:0.2">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(TranslateTransform.Y)"
+                                               To="0" Duration="0:0:0.2">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.ExitActions>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="MenuButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="15,12"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#2A2A2A"/>
+                    <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ScrollBarThumb" TargetType="{x:Type Thumb}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Thumb}">
+                        <Border Background="#3B82F6" CornerRadius="4"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="{x:Type ScrollBar}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ScrollBar}">
+                        <Grid>
+                            <Border Background="#1A1A1A" CornerRadius="4"/>
+                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                <Track.Thumb>
+                                    <Thumb Style="{StaticResource ScrollBarThumb}"/>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="RoundedProgressBar" TargetType="ProgressBar">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="3" 
+                                ClipToBounds="True">
+                            <Grid>
+                                <Border x:Name="PART_Track" />
+                                <Border x:Name="PART_Indicator" 
+                                        Background="{TemplateBinding Foreground}" 
+                                        HorizontalAlignment="Left"
+                                        CornerRadius="3"/>
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border Background="{StaticResource PrimaryBg}" CornerRadius="12">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="{StaticResource SecondaryBg}" 
+                    CornerRadius="12,12,0,0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Margin="20,0">
+                        <TextBlock Text="N" FontSize="24" FontWeight="Bold" VerticalAlignment="Center" 
+                                   Margin="0,0,10,0" Foreground="#60A5FA" FontFamily="Segoe UI"/>
+                        <TextBlock Text="Nexor" FontSize="16" FontWeight="SemiBold" 
+                                   Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                        <Button Content="─" Style="{StaticResource MenuButton}" Click="MinimizeButton_Click" Width="45"/>
+                        <Button Content="□" Style="{StaticResource MenuButton}" Click="MaximizeButton_Click" Width="45"/>
+                        <Button Content="✕" Style="{StaticResource MenuButton}" Click="CloseButton_Click" Width="45"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="240"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Background="{StaticResource SecondaryBg}" CornerRadius="0,0,0,12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Margin="15">
+                            <Border Background="#3B82F6" CornerRadius="8" Padding="3" Margin="0,10,0,15">
+                                <Button x:Name="BtnFreshSetup" Style="{StaticResource MenuButton}" 
+                                        Background="#1E88E5" Margin="0" Click="BtnFreshSetup_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="🚀" FontSize="18" Margin="0,0,10,0"/>
+                                        <StackPanel>
+                                            <TextBlock x:Name="TxtFreshSetup" Text="Configuração Limpa" 
+                                                       FontWeight="Bold" Foreground="White"/>
+                                            <TextBlock x:Name="TxtFreshSetupSub" Text="PRINCIPAL" 
+                                                       FontSize="10" Foreground="#B3E5FC"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Button>
+                            </Border>
+
+                            <Button x:Name="BtnDashboard" Style="{StaticResource MenuButton}" 
+                                    Margin="0,5" Click="BtnDashboard_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🏠" FontSize="16" Margin="0,0,10,0"/>
+                                    <TextBlock x:Name="TxtDashboard" Text="Dashboard"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Button x:Name="BtnProcesses" Style="{StaticResource MenuButton}" 
+                                    Margin="0,5" Click="BtnProcesses_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="⚙️" FontSize="16" Margin="0,0,10,0"/>
+                                    <TextBlock x:Name="TxtProcessesMenu" Text="Processos"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Button Style="{StaticResource MenuButton}" Margin="0,5">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🧹" FontSize="16" Margin="0,0,10,0"/>
+                                    <TextBlock x:Name="TxtCleanup" Text="Limpeza"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Button Style="{StaticResource MenuButton}" Margin="0,5">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="⚡" FontSize="16" Margin="0,0,10,0"/>
+                                    <TextBlock x:Name="TxtPerformance" Text="Performance"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Button Style="{StaticResource MenuButton}" Margin="0,5">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🛡️" FontSize="16" Margin="0,0,10,0"/>
+                                    <TextBlock x:Name="TxtSecurity" Text="Segurança"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Separator Background="#333333" Margin="0,20,0,10"/>
+
+                            <Button Style="{StaticResource MenuButton}" Margin="0,5">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="⚙️" FontSize="16" Margin="0,0,10,0"/>
+                                    <TextBlock x:Name="TxtSettings" Text="Configurações"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Margin="15,10,15,20" Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button x:Name="BtnLanguagePT" Click="BtnLanguagePT_Click" 
+                                Background="#2A2A2A" BorderThickness="0" Padding="10" Margin="5,0" 
+                                Width="55" Height="40" Cursor="Hand" ToolTip="Português">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                            <Viewbox Width="32" Height="22">
+                                                <Canvas Width="30" Height="20">
+                                                    <Rectangle Width="12" Height="20" Fill="#006600"/>
+                                                    <Rectangle Canvas.Left="12" Width="18" Height="20" Fill="#FF0000"/>
+                                                    <Ellipse Canvas.Left="9" Canvas.Top="7" Width="6" Height="6" 
+                                                         Stroke="#FFD700" StrokeThickness="0.8" Fill="Transparent"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <Button x:Name="BtnLanguageEN" Click="BtnLanguageEN_Click"
+                                Background="Transparent" BorderThickness="0" Padding="10" Margin="5,0" 
+                                Width="55" Height="40" Cursor="Hand" ToolTip="English">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                            <Viewbox Width="32" Height="22">
+                                                <Canvas Width="30" Height="20">
+                                                    <Rectangle Width="30" Height="20" Fill="#012169"/>
+                                                    <Line X1="0" Y1="0" X2="30" Y2="20" Stroke="White" StrokeThickness="3.5"/>
+                                                    <Line X1="30" Y1="0" X2="0" Y2="20" Stroke="White" StrokeThickness="3.5"/>
+                                                    <Line X1="0" Y1="0" X2="30" Y2="20" Stroke="#C8102E" StrokeThickness="2"/>
+                                                    <Line X1="30" Y1="0" X2="0" Y2="20" Stroke="#C8102E" StrokeThickness="2"/>
+                                                    <Rectangle Canvas.Left="13" Width="4" Height="20" Fill="White"/>
+                                                    <Rectangle Canvas.Top="8" Width="30" Height="4" Fill="White"/>
+                                                    <Rectangle Canvas.Left="13.5" Width="3" Height="20" Fill="#C8102E"/>
+                                                    <Rectangle Canvas.Top="8.5" Width="30" Height="3" Fill="#C8102E"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Column="1">
+                    <Frame x:Name="MainContentFrame" NavigationUIVisibility="Hidden" Visibility="Collapsed"/>
+
+                    <ScrollViewer x:Name="DashboardContent" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="30">
+                            <StackPanel Margin="0,0,0,30" Opacity="0">
+                                <StackPanel.Triggers>
+                                    <EventTrigger RoutedEvent="Loaded">
+                                        <BeginStoryboard Storyboard="{StaticResource FadeIn}"/>
+                                    </EventTrigger>
+                                </StackPanel.Triggers>
+                                <TextBlock x:Name="TxtWelcome" Text="Bem-vindo ao Nexor" 
+                                           FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+                                <TextBlock x:Name="TxtWelcomeSub" Text="Otimize, limpe e acelere o seu PC" 
+                                           FontSize="14" Foreground="{StaticResource TextSecondary}" Margin="0,8,0,0"/>
+                            </StackPanel>
+
+                            <Border Background="{StaticResource CardBg}" CornerRadius="16" Padding="30" Margin="0,0,0,20"
+                                    RenderTransformOrigin="0.5,0.5" Opacity="0">
+                                <Border.RenderTransform>
+                                    <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                </Border.RenderTransform>
+                                <Border.Triggers>
+                                    <EventTrigger RoutedEvent="Loaded">
+                                        <BeginStoryboard Storyboard="{StaticResource ScaleIn}"/>
+                                    </EventTrigger>
+                                </Border.Triggers>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <StackPanel Grid.Row="0">
+                                        <TextBlock x:Name="TxtSystemHealth" Text="Saúde do Sistema" 
+                                                   FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+                                        <TextBlock x:Name="TxtSystemHealthDesc" Text="O seu PC está em ótimo estado" 
+                                                   FontSize="14" Foreground="{StaticResource TextSecondary}" Margin="0,8,0,0"/>
+                                    </StackPanel>
+
+                                    <Grid Grid.Row="1" Margin="0,25,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Margin="0,0,15,0">
+                                            <Border Background="#3B82F615" CornerRadius="12" Padding="20,18">
+                                                <StackPanel>
+                                                    <TextBlock Text="CPU" FontSize="11" Foreground="#9CA3AF" 
+                                                               Margin="0,0,0,8" FontWeight="Medium"/>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <TextBlock Text="⚡" FontSize="22" Margin="0,0,10,0" 
+                                                                   VerticalAlignment="Center"/>
+                                                        <TextBlock x:Name="TxtCPUStatus" Text="Normal" 
+                                                                   FontSize="18" Foreground="#60A5FA" 
+                                                                   FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Margin="0,0,15,0">
+                                            <Border Background="#10B98115" CornerRadius="12" Padding="20,18">
+                                                <StackPanel>
+                                                    <TextBlock Text="Memória" FontSize="11" Foreground="#9CA3AF" 
+                                                               Margin="0,0,0,8" FontWeight="Medium"/>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <TextBlock Text="💾" FontSize="22" Margin="0,0,10,0" 
+                                                                   VerticalAlignment="Center"/>
+                                                        <TextBlock x:Name="TxtRAMStatus" Text="Bom" 
+                                                                   FontSize="18" Foreground="#10B981" 
+                                                                   FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2">
+                                            <Border Background="#8B5CF615" CornerRadius="12" Padding="20,18">
+                                                <StackPanel>
+                                                    <TextBlock Text="Performance" FontSize="11" Foreground="#9CA3AF" 
+                                                               Margin="0,0,0,8" FontWeight="Medium"/>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <TextBlock x:Name="TxtHealthScore" Text="98" 
+                                                                   FontSize="28" Foreground="#A78BFA" 
+                                                                   FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="%" FontSize="18" Foreground="#A78BFA" 
+                                                                   Margin="2,0,0,0" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+
+                            <TextBlock x:Name="TxtQuickActions" Text="Ações Rápidas" 
+                                       FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
+                                       Margin="0,10,0,20"/>
+
+                            <Grid Margin="0,0,0,30">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <Border Style="{StaticResource ActionCard}" Grid.Row="0" Grid.Column="0" 
+                                        Margin="0,0,10,10" MouseLeftButtonDown="CardCleanup_Click">
+                                    <StackPanel>
+                                        <Border Background="#3B82F620" Width="50" Height="50" 
+                                                CornerRadius="12" HorizontalAlignment="Left">
+                                            <TextBlock Text="🧹" FontSize="24" 
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock x:Name="TxtCardCleanup" Text="Limpeza" 
+                                                   FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
+                                                   Margin="0,15,0,5"/>
+                                        <TextBlock x:Name="TxtCardCleanupDesc" Text="Limpar ficheiros temporários" 
+                                                   FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource ActionCard}" Grid.Row="0" Grid.Column="1" 
+                                        Margin="5,0,5,10" MouseLeftButtonDown="CardProcesses_Click">
+                                    <StackPanel>
+                                        <Border Background="#8B5CF620" Width="50" Height="50" 
+                                                CornerRadius="12" HorizontalAlignment="Left">
+                                            <TextBlock Text="⚙️" FontSize="24" 
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock x:Name="TxtCardProcesses" Text="Processos" 
+                                                   FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
+                                                   Margin="0,15,0,5"/>
+                                        <TextBlock x:Name="TxtCardProcessesDesc" Text="Gerir aplicações ativas" 
+                                                   FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource ActionCard}" Grid.Row="0" Grid.Column="2" 
+                                        Margin="10,0,0,10" MouseLeftButtonDown="CardSecurity_Click">
+                                    <StackPanel>
+                                        <Border Background="#10B98120" Width="50" Height="50" 
+                                                CornerRadius="12" HorizontalAlignment="Left">
+                                            <TextBlock Text="🛡️" FontSize="24" 
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock x:Name="TxtCardSecurity" Text="Segurança" 
+                                                   FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
+                                                   Margin="0,15,0,5"/>
+                                        <TextBlock x:Name="TxtCardSecurityDesc" Text="Verificar proteção do sistema" 
+                                                   FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource ActionCard}" Grid.Row="1" Grid.Column="0" 
+                                        Margin="0,0,10,0" MouseLeftButtonDown="CardPerformance_Click">
+                                    <StackPanel>
+                                        <Border Background="#F59E0B20" Width="50" Height="50" 
+                                                CornerRadius="12" HorizontalAlignment="Left">
+                                            <TextBlock Text="⚡" FontSize="24" 
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock x:Name="TxtCardPerformance" Text="Performance Boost" 
+                                                   FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
+                                                   Margin="0,15,0,5"/>
+                                        <TextBlock x:Name="TxtCardPerformanceDesc" Text="Libertar memória RAM" 
+                                                   FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource ActionCard}" Grid.Row="1" Grid.Column="1" 
+                                        Margin="5,0,5,0" MouseLeftButtonDown="CardStorage_Click">
+                                    <StackPanel>
+                                        <Border Background="#EC489920" Width="50" Height="50" 
+                                                CornerRadius="12" HorizontalAlignment="Left">
+                                            <TextBlock Text="💾" FontSize="24" 
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock x:Name="TxtCardStorage" Text="Armazenamento" 
+                                                   FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
+                                                   Margin="0,15,0,5"/>
+                                        <TextBlock x:Name="TxtCardStorageDesc" Text="Analisar espaço em disco" 
+                                                   FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource ActionCard}" Grid.Row="1" Grid.Column="2" 
+                                        Margin="10,0,0,0" MouseLeftButtonDown="CardUpdates_Click">
+                                    <StackPanel>
+                                        <Border Background="#06B6D420" Width="50" Height="50" 
+                                                CornerRadius="12" HorizontalAlignment="Left">
+                                            <TextBlock Text="🔄" FontSize="24" 
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock x:Name="TxtCardUpdates" Text="Atualizações" 
+                                                   FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
+                                                   Margin="0,15,0,5"/>
+                                        <TextBlock x:Name="TxtCardUpdatesDesc" Text="Windows Update" 
+                                                   FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <TextBlock x:Name="TxtSystemInfo" Text="Informação do Sistema" 
+                                       FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
+                                       Margin="0,10,0,20"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Border Background="{StaticResource CardBg}" CornerRadius="16" 
+                                        Padding="24" Margin="0,0,10,0">
+                                    <StackPanel>
+                                        <StackPanel Margin="0,0,0,20">
+                                            <TextBlock Text="Sistema Operativo" FontSize="11" 
+                                                       Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5"/>
+                                            <TextBlock x:Name="TxtOS" Text="Windows 11 Pro" 
+                                                       FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Margin="0,0,0,20">
+                                            <TextBlock Text="Processador" FontSize="11" 
+                                                       Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5"/>
+                                            <TextBlock x:Name="TxtCPU" Text="Intel Core i7" 
+                                                       FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                        </StackPanel>
+
+                                        <StackPanel>
+                                            <TextBlock Text="Placa Gráfica" FontSize="11" 
+                                                       Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5"/>
+                                            <TextBlock x:Name="TxtGPU" Text="NVIDIA GeForce RTX" 
+                                                       FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="1" Background="{StaticResource CardBg}" 
+                                        CornerRadius="16" Padding="24" Margin="10,0,0,0">
+                                    <StackPanel>
+                                        <StackPanel Margin="0,0,0,20">
+                                            <TextBlock Text="Memória RAM" FontSize="11" 
+                                                       Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5"/>
+                                            <TextBlock x:Name="TxtRAM" Text="16 GB DDR4" 
+                                                       FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Margin="0,0,0,20">
+                                            <TextBlock Text="Armazenamento" FontSize="11" 
+                                                       Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5"/>
+                                            <TextBlock x:Name="TxtStorage" Text="512 GB NVMe SSD" 
+                                                       FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                        </StackPanel>
+
+                                        <StackPanel>
+                                            <TextBlock Text="Arquitetura" FontSize="11" 
+                                                       Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5"/>
+                                            <TextBlock x:Name="TxtArch" Text="64-bit" 
+                                                       FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <Border x:Name="CleanupOverlay" Background="#DD000000" Visibility="Collapsed">
+                        <Border Background="{StaticResource CardBg}" CornerRadius="20" 
+                                Width="450" Height="350" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                RenderTransformOrigin="0.5,0.5">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="1"/>
+                            </Border.RenderTransform>
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40">
+                                <Border Background="#3B82F620" CornerRadius="50" Width="80" Height="80" 
+                                        HorizontalAlignment="Center" Margin="0,0,0,25">
+                                    <TextBlock x:Name="OverlayIcon" Text="⚡" FontSize="40" 
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+
+                                <TextBlock x:Name="OverlayStatus" Text="A processar..." 
+                                           FontSize="20" Foreground="{StaticResource TextPrimary}" 
+                                           HorizontalAlignment="Center" FontWeight="SemiBold" Margin="0,0,0,10"/>
+
+                                <TextBlock x:Name="OverlayProgress" Text="" 
+                                           FontSize="14" Foreground="{StaticResource TextSecondary}" 
+                                           HorizontalAlignment="Center" Margin="0,0,0,25"
+                                           TextWrapping="Wrap" TextAlignment="Center" MaxWidth="350"/>
+
+                                <ProgressBar x:Name="OverlayProgressBar" Width="350" Height="6" 
+                                             Background="#2A2A2A" Foreground="{StaticResource AccentBlue}" 
+                                             IsIndeterminate="True" Style="{StaticResource RoundedProgressBar}"/>
+                            </StackPanel>
+                        </Border>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
