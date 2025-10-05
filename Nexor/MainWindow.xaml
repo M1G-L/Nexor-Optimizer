@@ -457,6 +457,7 @@
                                        FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
                                        Margin="0,8,0,15"/>
 
+                            <!-- Quick Actions Card Updates: Use similar colors with valid ARGB hex codes for WPF -->
                             <Grid Margin="0,0,0,18">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -468,15 +469,11 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <!-- 5. ActionCard Style (in Resources) -->
-                                <!-- Update in <Window.Resources> section: -->
-                                <!-- <Setter Property="Padding" Value="20"/> -->
-
-                                <!-- 6. All 6 action cards -->
+                                <!-- Cleanup (🧹): Soft cyan -->
                                 <Border Style="{StaticResource ActionCard}" Grid.Row="0" Grid.Column="0" 
                                         Margin="0,0,10,8" MouseLeftButtonDown="CardCleanup_Click">
                                     <StackPanel>
-                                        <Border Background="#22C6F525" Width="44" Height="44" 
+                                        <Border Background="#4022C6F5" Width="44" Height="44" 
                                                 CornerRadius="12" HorizontalAlignment="Left">
                                             <TextBlock Text="🧹" FontSize="22" 
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -489,10 +486,11 @@
                                     </StackPanel>
                                 </Border>
 
+                                <!-- Processes (⚙️): Soft violet -->
                                 <Border Style="{StaticResource ActionCard}" Grid.Row="0" Grid.Column="1" 
                                         Margin="5,0,5,8" MouseLeftButtonDown="CardProcesses_Click">
                                     <StackPanel>
-                                        <Border Background="#9B6CFC25" Width="44" Height="44" 
+                                        <Border Background="#409B6CFC" Width="44" Height="44" 
                                                 CornerRadius="12" HorizontalAlignment="Left">
                                             <TextBlock Text="⚙️" FontSize="22" 
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -505,10 +503,11 @@
                                     </StackPanel>
                                 </Border>
 
+                                <!-- Security (🛡️): Soft green -->
                                 <Border Style="{StaticResource ActionCard}" Grid.Row="0" Grid.Column="2" 
                                         Margin="10,0,0,8" MouseLeftButtonDown="CardSecurity_Click">
                                     <StackPanel>
-                                        <Border Background="#4ADE8025" Width="44" Height="44" 
+                                        <Border Background="#404ADE80" Width="44" Height="44" 
                                                 CornerRadius="12" HorizontalAlignment="Left">
                                             <TextBlock Text="🛡️" FontSize="22" 
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -521,10 +520,11 @@
                                     </StackPanel>
                                 </Border>
 
+                                <!-- Performance (⚡): Soft amber -->
                                 <Border Style="{StaticResource ActionCard}" Grid.Row="1" Grid.Column="0" 
                                         Margin="0,0,10,0" MouseLeftButtonDown="CardPerformance_Click">
                                     <StackPanel>
-                                        <Border Background="#FACC1530" Width="44" Height="44" 
+                                        <Border Background="#40FACC15" Width="44" Height="44" 
                                                 CornerRadius="12" HorizontalAlignment="Left">
                                             <TextBlock Text="⚡" FontSize="22" 
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -537,10 +537,11 @@
                                     </StackPanel>
                                 </Border>
 
+                                <!-- Storage (💾): Soft pink -->
                                 <Border Style="{StaticResource ActionCard}" Grid.Row="1" Grid.Column="1" 
                                         Margin="5,0,5,0" MouseLeftButtonDown="CardStorage_Click">
                                     <StackPanel>
-                                        <Border Background="#F472B625" Width="44" Height="44" 
+                                        <Border Background="#40F472B6" Width="44" Height="44" 
                                                 CornerRadius="12" HorizontalAlignment="Left">
                                             <TextBlock Text="💾" FontSize="22" 
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -553,10 +554,11 @@
                                     </StackPanel>
                                 </Border>
 
+                                <!-- Updates (🔄): Soft blue -->
                                 <Border Style="{StaticResource ActionCard}" Grid.Row="1" Grid.Column="2" 
                                         Margin="10,0,0,0" MouseLeftButtonDown="CardUpdates_Click">
                                     <StackPanel>
-                                        <Border Background="#60A5FA25" Width="44" Height="44" 
+                                        <Border Background="#4060A5FA" Width="44" Height="44" 
                                                 CornerRadius="12" HorizontalAlignment="Left">
                                             <TextBlock Text="🔄" FontSize="22" 
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
