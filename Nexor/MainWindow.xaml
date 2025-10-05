@@ -372,8 +372,10 @@
                             </StackPanel>
 
                             <!-- 3. System Health card -->
+                            <!-- System Health Card: Updated colors for a more harmonious look with the app's palette -->
+
                             <Border Background="{StaticResource CardBg}" CornerRadius="16" Padding="24" Margin="0,0,0,18"
-                                    RenderTransformOrigin="0.5,0.5" Opacity="0">
+        RenderTransformOrigin="0.5,0.5" Opacity="0">
                                 <Border.RenderTransform>
                                     <ScaleTransform ScaleX="1" ScaleY="1"/>
                                 </Border.RenderTransform>
@@ -390,9 +392,9 @@
 
                                     <StackPanel Grid.Row="0">
                                         <TextBlock x:Name="TxtSystemHealth" Text="Saúde do Sistema" 
-                                                   FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+                       FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
                                         <TextBlock x:Name="TxtSystemHealthDesc" Text="O seu PC está em ótimo estado" 
-                                                   FontSize="13" Foreground="{StaticResource TextSecondary}" Margin="0,6,0,0"/>
+                       FontSize="13" Foreground="{StaticResource TextSecondary}" Margin="0,6,0,0"/>
                                     </StackPanel>
 
                                     <Grid Grid.Row="1" Margin="0,18,0,0">
@@ -402,53 +404,70 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <StackPanel Grid.Column="0" Margin="0,0,15,0">
-                                            <Border Background="#3B82F615" CornerRadius="12" Padding="20,18">
-                                                <StackPanel>
-                                                    <TextBlock Text="CPU" FontSize="11" Foreground="#9CA3AF" 
-                                                               Margin="0,0,0,8" FontWeight="Medium"/>
-                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                        <TextBlock Text="⚡" FontSize="22" Margin="0,0,10,0" 
-                                                                   VerticalAlignment="Center"/>
-                                                        <TextBlock x:Name="TxtCPUStatus" Text="Normal" 
-                                                                   FontSize="18" Foreground="#60A5FA" 
-                                                                   FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                                    </StackPanel>
-                                                </StackPanel>
-                                            </Border>
-                                        </StackPanel>
+                                        <Border Grid.Column="0" Background="#000000" CornerRadius="12" Padding="18" Margin="0,0,10,0"
+                    BorderBrush="#3B82F6" BorderThickness="1">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
 
-                                        <StackPanel Grid.Column="1" Margin="0,0,15,0">
-                                            <Border Background="#10B98115" CornerRadius="12" Padding="20,18">
-                                                <StackPanel>
-                                                    <TextBlock Text="Memória" FontSize="11" Foreground="#9CA3AF" 
-                                                               Margin="0,0,0,8" FontWeight="Medium"/>
-                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                        <TextBlock Text="💾" FontSize="22" Margin="0,0,10,0" 
-                                                                   VerticalAlignment="Center"/>
-                                                        <TextBlock x:Name="TxtRAMStatus" Text="Bom" 
-                                                                   FontSize="18" Foreground="#10B981" 
-                                                                   FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                                    </StackPanel>
-                                                </StackPanel>
-                                            </Border>
-                                        </StackPanel>
+                                                <TextBlock Grid.Row="0" Text="CPU" FontSize="10" Foreground="#FFFFFF" 
+                               Margin="0,0,0,12" FontWeight="SemiBold"/>
 
-                                        <StackPanel Grid.Column="2">
-                                            <Border Background="#8B5CF615" CornerRadius="12" Padding="20,18">
-                                                <StackPanel>
-                                                    <TextBlock Text="Performance" FontSize="11" Foreground="#9CA3AF" 
-                                                               Margin="0,0,0,8" FontWeight="Medium"/>
-                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                        <TextBlock x:Name="TxtHealthScore" Text="98" 
-                                                                   FontSize="28" Foreground="#A78BFA" 
-                                                                   FontWeight="Bold" VerticalAlignment="Center"/>
-                                                        <TextBlock Text="%" FontSize="18" Foreground="#A78BFA" 
-                                                                   Margin="2,0,0,0" VerticalAlignment="Center"/>
-                                                    </StackPanel>
+                                                <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                                                    <Border Background="Transparent" CornerRadius="8" Padding="8" Margin="0,0,10,0">
+                                                        <TextBlock Text="⚡" FontSize="20" VerticalAlignment="Center" Foreground="#FFFFFF"/>
+                                                    </Border>
+                                                    <TextBlock x:Name="TxtCPUStatus" Text="Normal" 
+                                   FontSize="17" Foreground="#FFFFFF" 
+                                   FontWeight="Bold" VerticalAlignment="Center"/>
                                                 </StackPanel>
-                                            </Border>
-                                        </StackPanel>
+                                            </Grid>
+                                        </Border>
+
+                                        <Border Grid.Column="1" Background="#000000" CornerRadius="12" Padding="18" Margin="0,0,10,0"
+                    BorderBrush="#3B82F6" BorderThickness="1">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
+
+                                                <TextBlock Grid.Row="0" Text="MEMÓRIA" FontSize="10" Foreground="#FFFFFF" 
+                               Margin="0,0,0,12" FontWeight="SemiBold"/>
+
+                                                <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                                                    <Border Background="Transparent" CornerRadius="8" Padding="8" Margin="0,0,10,0">
+                                                        <TextBlock Text="💾" FontSize="20" VerticalAlignment="Center" Foreground="#FFFFFF"/>
+                                                    </Border>
+                                                    <TextBlock x:Name="TxtRAMStatus" Text="Bom" 
+                                   FontSize="17" Foreground="#FFFFFF" 
+                                   FontWeight="Bold" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+
+                                        <Border Grid.Column="2" Background="#000000" CornerRadius="12" Padding="18"
+                    BorderBrush="#3B82F6" BorderThickness="1">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
+
+                                                <TextBlock Grid.Row="0" Text="DESEMPENHO" FontSize="10" Foreground="#FFFFFF" 
+                               Margin="0,0,0,12" FontWeight="SemiBold"/>
+
+                                                <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                                                    <TextBlock x:Name="TxtHealthScore" Text="98" 
+                                   FontSize="32" Foreground="#FFFFFF" 
+                                   FontWeight="Black" VerticalAlignment="Center" Margin="0,0,2,0"/>
+                                                    <TextBlock Text="%" FontSize="16" Foreground="#FFFFFF" 
+                                   FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,0,4"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
                                     </Grid>
                                 </Grid>
                             </Border>
@@ -469,105 +488,105 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <!-- Cleanup (🧹): Soft cyan -->
+                                <!-- Cleanup -->
                                 <Border Style="{StaticResource ActionCard}" Grid.Row="0" Grid.Column="0" 
-                                        Margin="0,0,10,8" MouseLeftButtonDown="CardCleanup_Click">
+            Margin="0,0,10,8" MouseLeftButtonDown="CardCleanup_Click">
                                     <StackPanel>
-                                        <Border Background="#4022C6F5" Width="44" Height="44" 
-                                                CornerRadius="12" HorizontalAlignment="Left">
-                                            <TextBlock Text="🧹" FontSize="22" 
-                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Border Background="#000000" BorderBrush="#3B82F6" BorderThickness="1" 
+                    Width="44" Height="44" CornerRadius="12" HorizontalAlignment="Left">
+                                            <TextBlock Text="🧹" FontSize="22" Foreground="#FFFFFF"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <TextBlock x:Name="TxtCardCleanup" Text="Limpeza" 
-                                                   FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
-                                                   Margin="0,12,0,4"/>
+                       FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" 
+                       Margin="0,12,0,4"/>
                                         <TextBlock x:Name="TxtCardCleanupDesc" Text="Limpar ficheiros temporários" 
-                                                   FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                       FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
 
-                                <!-- Processes (⚙️): Soft violet -->
+                                <!-- Processes -->
                                 <Border Style="{StaticResource ActionCard}" Grid.Row="0" Grid.Column="1" 
-                                        Margin="5,0,5,8" MouseLeftButtonDown="CardProcesses_Click">
+            Margin="5,0,5,8" MouseLeftButtonDown="CardProcesses_Click">
                                     <StackPanel>
-                                        <Border Background="#409B6CFC" Width="44" Height="44" 
-                                                CornerRadius="12" HorizontalAlignment="Left">
-                                            <TextBlock Text="⚙️" FontSize="22" 
-                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Border Background="#000000" BorderBrush="#3B82F6" BorderThickness="1" 
+                    Width="44" Height="44" CornerRadius="12" HorizontalAlignment="Left">
+                                            <TextBlock Text="⚙️" FontSize="22" Foreground="#FFFFFF"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <TextBlock x:Name="TxtCardProcesses" Text="Processos" 
-                                                   FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
-                                                   Margin="0,12,0,4"/>
+                       FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" 
+                       Margin="0,12,0,4"/>
                                         <TextBlock x:Name="TxtCardProcessesDesc" Text="Gerir aplicações ativas" 
-                                                   FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                       FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
 
-                                <!-- Security (🛡️): Soft green -->
+                                <!-- Security -->
                                 <Border Style="{StaticResource ActionCard}" Grid.Row="0" Grid.Column="2" 
-                                        Margin="10,0,0,8" MouseLeftButtonDown="CardSecurity_Click">
+            Margin="10,0,0,8" MouseLeftButtonDown="CardSecurity_Click">
                                     <StackPanel>
-                                        <Border Background="#404ADE80" Width="44" Height="44" 
-                                                CornerRadius="12" HorizontalAlignment="Left">
-                                            <TextBlock Text="🛡️" FontSize="22" 
-                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Border Background="#000000" BorderBrush="#3B82F6" BorderThickness="1" 
+                    Width="44" Height="44" CornerRadius="12" HorizontalAlignment="Left">
+                                            <TextBlock Text="🛡️" FontSize="22" Foreground="#FFFFFF"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <TextBlock x:Name="TxtCardSecurity" Text="Segurança" 
-                                                   FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
-                                                   Margin="0,12,0,4"/>
+                       FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" 
+                       Margin="0,12,0,4"/>
                                         <TextBlock x:Name="TxtCardSecurityDesc" Text="Verificar proteção do sistema" 
-                                                   FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                       FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
 
-                                <!-- Performance (⚡): Soft amber -->
+                                <!-- Performance -->
                                 <Border Style="{StaticResource ActionCard}" Grid.Row="1" Grid.Column="0" 
-                                        Margin="0,0,10,0" MouseLeftButtonDown="CardPerformance_Click">
+            Margin="0,0,10,0" MouseLeftButtonDown="CardPerformance_Click">
                                     <StackPanel>
-                                        <Border Background="#40FACC15" Width="44" Height="44" 
-                                                CornerRadius="12" HorizontalAlignment="Left">
-                                            <TextBlock Text="⚡" FontSize="22" 
-                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Border Background="#000000" BorderBrush="#3B82F6" BorderThickness="1" 
+                    Width="44" Height="44" CornerRadius="12" HorizontalAlignment="Left">
+                                            <TextBlock Text="⚡" FontSize="22" Foreground="#FFFFFF"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <TextBlock x:Name="TxtCardPerformance" Text="Performance Boost" 
-                                                   FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
-                                                   Margin="0,12,0,4"/>
+                       FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" 
+                       Margin="0,12,0,4"/>
                                         <TextBlock x:Name="TxtCardPerformanceDesc" Text="Libertar memória RAM" 
-                                                   FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                       FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
 
-                                <!-- Storage (💾): Soft pink -->
+                                <!-- Storage -->
                                 <Border Style="{StaticResource ActionCard}" Grid.Row="1" Grid.Column="1" 
-                                        Margin="5,0,5,0" MouseLeftButtonDown="CardStorage_Click">
+            Margin="5,0,5,0" MouseLeftButtonDown="CardStorage_Click">
                                     <StackPanel>
-                                        <Border Background="#40F472B6" Width="44" Height="44" 
-                                                CornerRadius="12" HorizontalAlignment="Left">
-                                            <TextBlock Text="💾" FontSize="22" 
-                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Border Background="#000000" BorderBrush="#3B82F6" BorderThickness="1" 
+                    Width="44" Height="44" CornerRadius="12" HorizontalAlignment="Left">
+                                            <TextBlock Text="💾" FontSize="22" Foreground="#FFFFFF"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <TextBlock x:Name="TxtCardStorage" Text="Armazenamento" 
-                                                   FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
-                                                   Margin="0,12,0,4"/>
+                       FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" 
+                       Margin="0,12,0,4"/>
                                         <TextBlock x:Name="TxtCardStorageDesc" Text="Analisar espaço em disco" 
-                                                   FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                       FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
 
-                                <!-- Updates (🔄): Soft blue -->
+                                <!-- Updates -->
                                 <Border Style="{StaticResource ActionCard}" Grid.Row="1" Grid.Column="2" 
-                                        Margin="10,0,0,0" MouseLeftButtonDown="CardUpdates_Click">
+            Margin="10,0,0,0" MouseLeftButtonDown="CardUpdates_Click">
                                     <StackPanel>
-                                        <Border Background="#4060A5FA" Width="44" Height="44" 
-                                                CornerRadius="12" HorizontalAlignment="Left">
-                                            <TextBlock Text="🔄" FontSize="22" 
-                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Border Background="#000000" BorderBrush="#3B82F6" BorderThickness="1" 
+                    Width="44" Height="44" CornerRadius="12" HorizontalAlignment="Left">
+                                            <TextBlock Text="🔄" FontSize="22" Foreground="#FFFFFF"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <TextBlock x:Name="TxtCardUpdates" Text="Atualizações" 
-                                                   FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
-                                                   Margin="0,12,0,4"/>
+                       FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" 
+                       Margin="0,12,0,4"/>
                                         <TextBlock x:Name="TxtCardUpdatesDesc" Text="Windows Update" 
-                                                   FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                       FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
                             </Grid>
