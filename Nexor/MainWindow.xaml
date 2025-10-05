@@ -44,7 +44,7 @@
         <Style x:Key="ActionCard" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource CardBg}"/>
             <Setter Property="CornerRadius" Value="16"/>
-            <Setter Property="Padding" Value="24"/>
+            <Setter Property="Padding" Value="20"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
             <Setter Property="RenderTransform">
@@ -357,20 +357,22 @@
                     <Frame x:Name="MainContentFrame" NavigationUIVisibility="Hidden" Visibility="Collapsed"/>
 
                     <ScrollViewer x:Name="DashboardContent" VerticalScrollBarVisibility="Auto">
-                        <StackPanel Margin="30">
-                            <StackPanel Margin="0,0,0,30" Opacity="0">
+                        <StackPanel Margin="25">
+                            <!-- 2. Welcome section -->
+                            <StackPanel Margin="0,0,0,20" Opacity="0">
                                 <StackPanel.Triggers>
                                     <EventTrigger RoutedEvent="Loaded">
                                         <BeginStoryboard Storyboard="{StaticResource FadeIn}"/>
                                     </EventTrigger>
                                 </StackPanel.Triggers>
                                 <TextBlock x:Name="TxtWelcome" Text="Bem-vindo ao Nexor" 
-                                           FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+                                           FontSize="28" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
                                 <TextBlock x:Name="TxtWelcomeSub" Text="Otimize, limpe e acelere o seu PC" 
-                                           FontSize="14" Foreground="{StaticResource TextSecondary}" Margin="0,8,0,0"/>
+                                           FontSize="13" Foreground="{StaticResource TextSecondary}" Margin="0,6,0,0"/>
                             </StackPanel>
 
-                            <Border Background="{StaticResource CardBg}" CornerRadius="16" Padding="30" Margin="0,0,0,20"
+                            <!-- 3. System Health card -->
+                            <Border Background="{StaticResource CardBg}" CornerRadius="16" Padding="24" Margin="0,0,0,18"
                                     RenderTransformOrigin="0.5,0.5" Opacity="0">
                                 <Border.RenderTransform>
                                     <ScaleTransform ScaleX="1" ScaleY="1"/>
@@ -388,12 +390,12 @@
 
                                     <StackPanel Grid.Row="0">
                                         <TextBlock x:Name="TxtSystemHealth" Text="Saúde do Sistema" 
-                                                   FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+                                                   FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
                                         <TextBlock x:Name="TxtSystemHealthDesc" Text="O seu PC está em ótimo estado" 
-                                                   FontSize="14" Foreground="{StaticResource TextSecondary}" Margin="0,8,0,0"/>
+                                                   FontSize="13" Foreground="{StaticResource TextSecondary}" Margin="0,6,0,0"/>
                                     </StackPanel>
 
-                                    <Grid Grid.Row="1" Margin="0,25,0,0">
+                                    <Grid Grid.Row="1" Margin="0,18,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="*"/>
@@ -452,10 +454,10 @@
                             </Border>
 
                             <TextBlock x:Name="TxtQuickActions" Text="Ações Rápidas" 
-                                       FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
-                                       Margin="0,10,0,20"/>
+                                       FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
+                                       Margin="0,8,0,15"/>
 
-                            <Grid Margin="0,0,0,30">
+                            <Grid Margin="0,0,0,18">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
@@ -466,99 +468,104 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
+                                <!-- 5. ActionCard Style (in Resources) -->
+                                <!-- Update in <Window.Resources> section: -->
+                                <!-- <Setter Property="Padding" Value="20"/> -->
+
+                                <!-- 6. All 6 action cards -->
                                 <Border Style="{StaticResource ActionCard}" Grid.Row="0" Grid.Column="0" 
-                                        Margin="0,0,10,10" MouseLeftButtonDown="CardCleanup_Click">
+                                        Margin="0,0,10,8" MouseLeftButtonDown="CardCleanup_Click">
                                     <StackPanel>
-                                        <Border Background="#3B82F620" Width="50" Height="50" 
+                                        <Border Background="#22C6F525" Width="44" Height="44" 
                                                 CornerRadius="12" HorizontalAlignment="Left">
-                                            <TextBlock Text="🧹" FontSize="24" 
+                                            <TextBlock Text="🧹" FontSize="22" 
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <TextBlock x:Name="TxtCardCleanup" Text="Limpeza" 
-                                                   FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
-                                                   Margin="0,15,0,5"/>
+                                                   FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
+                                                   Margin="0,12,0,4"/>
                                         <TextBlock x:Name="TxtCardCleanupDesc" Text="Limpar ficheiros temporários" 
-                                                   FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                                                   FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
 
                                 <Border Style="{StaticResource ActionCard}" Grid.Row="0" Grid.Column="1" 
-                                        Margin="5,0,5,10" MouseLeftButtonDown="CardProcesses_Click">
+                                        Margin="5,0,5,8" MouseLeftButtonDown="CardProcesses_Click">
                                     <StackPanel>
-                                        <Border Background="#8B5CF620" Width="50" Height="50" 
+                                        <Border Background="#9B6CFC25" Width="44" Height="44" 
                                                 CornerRadius="12" HorizontalAlignment="Left">
-                                            <TextBlock Text="⚙️" FontSize="24" 
+                                            <TextBlock Text="⚙️" FontSize="22" 
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <TextBlock x:Name="TxtCardProcesses" Text="Processos" 
-                                                   FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
-                                                   Margin="0,15,0,5"/>
+                                                   FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
+                                                   Margin="0,12,0,4"/>
                                         <TextBlock x:Name="TxtCardProcessesDesc" Text="Gerir aplicações ativas" 
-                                                   FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                                                   FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
 
                                 <Border Style="{StaticResource ActionCard}" Grid.Row="0" Grid.Column="2" 
-                                        Margin="10,0,0,10" MouseLeftButtonDown="CardSecurity_Click">
+                                        Margin="10,0,0,8" MouseLeftButtonDown="CardSecurity_Click">
                                     <StackPanel>
-                                        <Border Background="#10B98120" Width="50" Height="50" 
+                                        <Border Background="#4ADE8025" Width="44" Height="44" 
                                                 CornerRadius="12" HorizontalAlignment="Left">
-                                            <TextBlock Text="🛡️" FontSize="24" 
+                                            <TextBlock Text="🛡️" FontSize="22" 
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <TextBlock x:Name="TxtCardSecurity" Text="Segurança" 
-                                                   FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
-                                                   Margin="0,15,0,5"/>
+                                                   FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
+                                                   Margin="0,12,0,4"/>
                                         <TextBlock x:Name="TxtCardSecurityDesc" Text="Verificar proteção do sistema" 
-                                                   FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                                                   FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
 
                                 <Border Style="{StaticResource ActionCard}" Grid.Row="1" Grid.Column="0" 
                                         Margin="0,0,10,0" MouseLeftButtonDown="CardPerformance_Click">
                                     <StackPanel>
-                                        <Border Background="#F59E0B20" Width="50" Height="50" 
+                                        <Border Background="#FACC1530" Width="44" Height="44" 
                                                 CornerRadius="12" HorizontalAlignment="Left">
-                                            <TextBlock Text="⚡" FontSize="24" 
+                                            <TextBlock Text="⚡" FontSize="22" 
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <TextBlock x:Name="TxtCardPerformance" Text="Performance Boost" 
-                                                   FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
-                                                   Margin="0,15,0,5"/>
+                                                   FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
+                                                   Margin="0,12,0,4"/>
                                         <TextBlock x:Name="TxtCardPerformanceDesc" Text="Libertar memória RAM" 
-                                                   FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                                                   FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
 
                                 <Border Style="{StaticResource ActionCard}" Grid.Row="1" Grid.Column="1" 
                                         Margin="5,0,5,0" MouseLeftButtonDown="CardStorage_Click">
                                     <StackPanel>
-                                        <Border Background="#EC489920" Width="50" Height="50" 
+                                        <Border Background="#F472B625" Width="44" Height="44" 
                                                 CornerRadius="12" HorizontalAlignment="Left">
-                                            <TextBlock Text="💾" FontSize="24" 
+                                            <TextBlock Text="💾" FontSize="22" 
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <TextBlock x:Name="TxtCardStorage" Text="Armazenamento" 
-                                                   FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
-                                                   Margin="0,15,0,5"/>
+                                                   FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
+                                                   Margin="0,12,0,4"/>
                                         <TextBlock x:Name="TxtCardStorageDesc" Text="Analisar espaço em disco" 
-                                                   FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                                                   FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
 
                                 <Border Style="{StaticResource ActionCard}" Grid.Row="1" Grid.Column="2" 
                                         Margin="10,0,0,0" MouseLeftButtonDown="CardUpdates_Click">
                                     <StackPanel>
-                                        <Border Background="#06B6D420" Width="50" Height="50" 
+                                        <Border Background="#60A5FA25" Width="44" Height="44" 
                                                 CornerRadius="12" HorizontalAlignment="Left">
-                                            <TextBlock Text="🔄" FontSize="24" 
+                                            <TextBlock Text="🔄" FontSize="22" 
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <TextBlock x:Name="TxtCardUpdates" Text="Atualizações" 
-                                                   FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
-                                                   Margin="0,15,0,5"/>
+                                                   FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
+                                                   Margin="0,12,0,4"/>
                                         <TextBlock x:Name="TxtCardUpdatesDesc" Text="Windows Update" 
-                                                   FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                                                   FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
                             </Grid>
@@ -654,7 +661,7 @@
                                 <ProgressBar x:Name="OverlayProgressBar" Width="350" Height="6" 
                                              Background="#2A2A2A" Foreground="{StaticResource AccentBlue}" 
                                              IsIndeterminate="True" Style="{StaticResource RoundedProgressBar}"/>
-                            </StackPanel>
+                            </StackPanel>                                                                                                           
                         </Border>
                     </Border>
                 </Grid>
