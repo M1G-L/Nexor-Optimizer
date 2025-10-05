@@ -1,0 +1,276 @@
+﻿<Page x:Class="Nexor.CleanupPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Background="Transparent">
+
+    <Page.Resources>
+        <SolidColorBrush x:Key="PrimaryBg" Color="#0F0F0F"/>
+        <SolidColorBrush x:Key="CardBg" Color="#1C1C1C"/>
+        <SolidColorBrush x:Key="AccentBlue" Color="#3B82F6"/>
+        <SolidColorBrush x:Key="TextPrimary" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#9CA3AF"/>
+
+        <Style x:Key="ModernButton" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource AccentBlue}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="24,12"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="10" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#60A5FA"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#374151"/>
+                    <Setter Property="Foreground" Value="#6B7280"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="GreenButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
+            <Setter Property="Background" Value="#10B981"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#059669"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#374151"/>
+                    <Setter Property="Foreground" Value="#6B7280"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ScrollBarThumb" TargetType="{x:Type Thumb}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Thumb}">
+                        <Border Background="#3B82F6" CornerRadius="4"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="{x:Type ScrollBar}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ScrollBar}">
+                        <Grid>
+                            <Border Background="#1A1A1A" CornerRadius="4"/>
+                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                <Track.Thumb>
+                                    <Thumb Style="{StaticResource ScrollBarThumb}"/>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="30,20,30,30">
+                <!-- Header -->
+                <StackPanel Margin="0,0,0,25">
+                    <TextBlock x:Name="TxtPageTitle" Text="Limpeza do Sistema" 
+                               FontSize="28" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+                    <TextBlock x:Name="TxtPageSubtitle" Text="Liberte espaço e melhore a performance" 
+                               FontSize="13" Foreground="{StaticResource TextSecondary}" Margin="0,6,0,0"/>
+                </StackPanel>
+
+                <!-- Stats Cards -->
+                <Grid Margin="0,0,0,25">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Total Space Card -->
+                    <Border Grid.Column="0" Background="{StaticResource CardBg}" 
+                            CornerRadius="16" Padding="24" Margin="0,0,10,0">
+                        <StackPanel>
+                            <TextBlock x:Name="TxtTotalSpace" Text="Espaço Total a Libertar" 
+                                       FontSize="12" Foreground="{StaticResource TextSecondary}" 
+                                       Margin="0,0,0,12"/>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Background="#000000" BorderBrush="#3B82F6" BorderThickness="1" 
+                                        Width="44" Height="44" CornerRadius="12" Margin="0,0,15,0">
+                                    <TextBlock Text="💾" FontSize="22" Foreground="#FFFFFF"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock x:Name="TxtTotalSize" Text="0 MB" 
+                                           FontSize="26" FontWeight="Bold" 
+                                           Foreground="{StaticResource AccentBlue}" 
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Selected Items Card -->
+                    <Border Grid.Column="1" Background="{StaticResource CardBg}" 
+                            CornerRadius="16" Padding="24" Margin="10,0,0,0">
+                        <StackPanel>
+                            <TextBlock x:Name="TxtSelectedItems" Text="Itens Selecionados" 
+                                       FontSize="12" Foreground="{StaticResource TextSecondary}" 
+                                       Margin="0,0,0,12"/>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Background="#000000" BorderBrush="#10B981" BorderThickness="1" 
+                                        Width="44" Height="44" CornerRadius="12" Margin="0,0,15,0">
+                                    <TextBlock Text="📋" FontSize="22" Foreground="#FFFFFF"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock x:Name="TxtTotalFiles" Text="0 ficheiros" 
+                                           FontSize="26" FontWeight="Bold" 
+                                           Foreground="#10B981" 
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Action Buttons -->
+                <Grid Margin="0,0,0,25">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Button x:Name="BtnScan" Grid.Column="0" 
+                            Style="{StaticResource ModernButton}" 
+                            Margin="0,0,10,0" Height="48"
+                            Click="BtnScan_Click">
+                        <TextBlock Text="🔍 Analisar Sistema" FontSize="14"/>
+                    </Button>
+
+                    <Button x:Name="BtnCleanSelected" Grid.Column="1" 
+                            Style="{StaticResource GreenButton}" 
+                            Margin="10,0,0,0" Height="48"
+                            Click="BtnCleanSelected_Click">
+                        <TextBlock Text="🧹 Limpar Selecionados" FontSize="14"/>
+                    </Button>
+                </Grid>
+
+                <!-- Scan Progress -->
+                <Border x:Name="ScanProgress" Background="{StaticResource CardBg}" 
+                        CornerRadius="12" Padding="20" Margin="0,0,0,20" Visibility="Collapsed">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <TextBlock Text="⏳" FontSize="20" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TxtScanStatus" Text="A analisar..." 
+                                       FontSize="14" Foreground="{StaticResource TextPrimary}" 
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ProgressBar Height="6" IsIndeterminate="True" 
+                                     Background="#2A2A2A" Foreground="{StaticResource AccentBlue}">
+                            <ProgressBar.Template>
+                                <ControlTemplate TargetType="ProgressBar">
+                                    <Border Background="{TemplateBinding Background}" 
+                                            CornerRadius="3" ClipToBounds="True">
+                                        <Grid>
+                                            <Border x:Name="PART_Track"/>
+                                            <Border x:Name="PART_Indicator" 
+                                                    Background="{TemplateBinding Foreground}" 
+                                                    HorizontalAlignment="Left" CornerRadius="3"/>
+                                        </Grid>
+                                    </Border>
+                                </ControlTemplate>
+                            </ProgressBar.Template>
+                        </ProgressBar>
+                    </StackPanel>
+                </Border>
+
+                <!-- Cleanup Progress -->
+                <Border x:Name="CleanupProgress" Background="{StaticResource CardBg}" 
+                        CornerRadius="12" Padding="20" Margin="0,0,0,20" Visibility="Collapsed">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <TextBlock Text="🧹" FontSize="20" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TxtCleanupStatus" Text="A limpar..." 
+                                       FontSize="14" Foreground="{StaticResource TextPrimary}" 
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ProgressBar Height="6" IsIndeterminate="True" 
+                                     Background="#2A2A2A" Foreground="#10B981">
+                            <ProgressBar.Template>
+                                <ControlTemplate TargetType="ProgressBar">
+                                    <Border Background="{TemplateBinding Background}" 
+                                            CornerRadius="3" ClipToBounds="True">
+                                        <Grid>
+                                            <Border x:Name="PART_Track"/>
+                                            <Border x:Name="PART_Indicator" 
+                                                    Background="{TemplateBinding Foreground}" 
+                                                    HorizontalAlignment="Left" CornerRadius="3"/>
+                                        </Grid>
+                                    </Border>
+                                </ControlTemplate>
+                            </ProgressBar.Template>
+                        </ProgressBar>
+                    </StackPanel>
+                </Border>
+
+                <!-- Categories List -->
+                <StackPanel>
+                    <TextBlock Text="Categorias de Limpeza" 
+                               FontSize="18" FontWeight="Bold" 
+                               Foreground="{StaticResource TextPrimary}" 
+                               Margin="0,0,0,15"/>
+
+                    <ItemsControl x:Name="CategoriesList">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="2" HorizontalAlignment="Stretch"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemContainerStyle>
+                            <Style>
+                                <Setter Property="FrameworkElement.Margin" Value="0,0,12,0"/>
+                            </Style>
+                        </ItemsControl.ItemContainerStyle>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- Info Section -->
+                <Border Background="{StaticResource CardBg}" 
+                        CornerRadius="12" Padding="20" Margin="0,20,0,0">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock Text="ℹ️" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Top"/>
+                            <TextBlock Text="Informação" FontSize="16" FontWeight="Bold" 
+                                       Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock TextWrapping="Wrap" FontSize="12" 
+                                   Foreground="{StaticResource TextSecondary}" LineHeight="18">
+                            <Run Text="• Ficheiros Temporários: Ficheiros criados por aplicações que já não são necessários"/>
+                            <LineBreak/>
+                            <Run Text="• Windows Temp: Ficheiros temporários do sistema operativo"/>
+                            <LineBreak/>
+                            <Run Text="• Prefetch: Cache de pré-carregamento de aplicações"/>
+                            <LineBreak/>
+                            <Run Text="• Reciclagem: Ficheiros na reciclagem aguardando eliminação permanente"/>
+                            <LineBreak/>
+                            <Run Text="• Cache do Browser: Ficheiros temporários dos navegadores web"/>
+                            <LineBreak/>
+                            <Run Text="• Miniaturas: Cache de pré-visualizações de imagens"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

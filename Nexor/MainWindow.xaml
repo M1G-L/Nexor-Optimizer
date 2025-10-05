@@ -275,7 +275,7 @@
                                 </StackPanel>
                             </Button>
 
-                            <Button Style="{StaticResource MenuButton}" Margin="0,5">
+                            <Button x:Name="BtnCleanup" Style="{StaticResource MenuButton}" Margin="0,5" Click="BtnCleanup_Click">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="🧹" FontSize="16" Margin="0,0,10,0"/>
                                     <TextBlock x:Name="TxtCleanup" Text="Limpeza"/>

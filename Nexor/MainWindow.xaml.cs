@@ -302,6 +302,13 @@ namespace Nexor
         {
             BtnProcesses_Click(sender, new RoutedEventArgs());
         }
+        private void BtnCleanup_Click(object sender, RoutedEventArgs e)
+        {
+            var cleanupPage = new CleanupPage(_currentLanguage);
+            MainContentFrame.Navigate(cleanupPage);
+            MainContentFrame.Visibility = Visibility.Visible;
+            DashboardContent.Visibility = Visibility.Collapsed;
+        }
 
         private async void CardSecurity_Click(object sender, MouseButtonEventArgs e)
         {
