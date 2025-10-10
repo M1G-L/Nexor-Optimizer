@@ -12,11 +12,13 @@
 		<Authors>Nexor Team</Authors>
 		<Product>Nexor PC Optimizer</Product>
 		<Description>Advanced PC Optimization Tool</Description>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="System.Diagnostics.PerformanceCounter" Version="8.0.0" />
 		<PackageReference Include="System.Management" Version="8.0.0" />
+		<PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.9" />
 	</ItemGroup>
 
 	<ItemGroup>
