@@ -158,6 +158,7 @@
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
                 <StackPanel>
 
+                    <!-- Status Panel with Live Updates -->
                     <Border Style="{StaticResource StepCard}">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -174,6 +175,16 @@
                                            FontSize="14" 
                                            Foreground="{StaticResource TextSecondary}"
                                            Margin="0,5,0,0"/>
+
+                                <!-- Live Status Display -->
+                                <TextBlock x:Name="TxtLiveStatus"
+                                           Text=""
+                                           FontSize="12"
+                                           Foreground="{StaticResource AccentBlue}"
+                                           Margin="0,8,0,0"
+                                           TextWrapping="Wrap"
+                                           Visibility="Collapsed"/>
+
                                 <ProgressBar x:Name="ProgressBarMain" 
                                             Height="4" 
                                             Margin="0,10,0,0"
