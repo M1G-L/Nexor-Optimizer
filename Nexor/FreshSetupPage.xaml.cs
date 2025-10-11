@@ -272,19 +272,29 @@ namespace Nexor
 
         private async Task<bool> CheckInternetConnection()
         {
-            return await Task.Run(async () =>
+            try
+            {
+                using (var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(10)))
+                {
+                    var response = await _httpClient.GetAsync("http://www.msftconnecttest.com/connecttest.txt", cts.Token);
+                    return response.IsSuccessStatusCode;
+                }
+            }
+            catch
             {
                 try
                 {
-                    var response = await _httpClient.GetAsync("http://www.msftconnecttest.com/connecttest.txt",
-                        new System.Threading.CancellationToken());
-                    return response.IsSuccessStatusCode;
+                    using (var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(10)))
+                    {
+                        var response = await _httpClient.GetAsync("http://www.google.com", cts.Token);
+                        return response.IsSuccessStatusCode;
+                    }
                 }
                 catch
                 {
                     return false;
                 }
-            });
+            }
         }
 
         private async Task<bool> CheckWindowsUpdateService()
@@ -454,7 +464,6 @@ namespace Nexor
 
                     if (!diagnosticsPass)
                     {
-                        bool shouldContinue = false;
                         ShowCustomDialog(
                             _currentLanguage == "PT" ? "Aviso" : "Warning",
                             _currentLanguage == "PT"
@@ -493,7 +502,12 @@ namespace Nexor
                     _isRunning = false;
                     BtnRunAll.IsEnabled = true;
                 },
-                null
+                () =>
+                {
+                    AddLog("\n❌ " + (_currentLanguage == "PT"
+                        ? "Processo cancelado pelo utilizador"
+                        : "Process cancelled by user"));
+                }
             );
         }
 
