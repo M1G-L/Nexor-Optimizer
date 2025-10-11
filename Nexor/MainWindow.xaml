@@ -6,10 +6,11 @@
         ResizeMode="CanResize">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="PrimaryBg" Color="#0F0F0F"/>
-        <SolidColorBrush x:Key="SecondaryBg" Color="#1A1A1A"/>
-        <SolidColorBrush x:Key="CardBg" Color="#1C1C1C"/>
-        <SolidColorBrush x:Key="AccentBlue" Color="#3B82F6"/>
+        <!-- Color Palette inspired by AtlasOS -->
+        <SolidColorBrush x:Key="PrimaryBg" Color="#010515"/>
+        <SolidColorBrush x:Key="SecondaryBg" Color="#0A0F1E"/>
+        <SolidColorBrush x:Key="CardBg" Color="#0F1419"/>
+        <SolidColorBrush x:Key="AccentBlue" Color="#1990FE"/>
         <SolidColorBrush x:Key="AccentGreen" Color="#10B981"/>
         <SolidColorBrush x:Key="AccentOrange" Color="#F59E0B"/>
         <SolidColorBrush x:Key="AccentRed" Color="#EF4444"/>
@@ -18,6 +19,7 @@
         <SolidColorBrush x:Key="AccentPink" Color="#EC4899"/>
         <SolidColorBrush x:Key="TextPrimary" Color="#FFFFFF"/>
         <SolidColorBrush x:Key="TextSecondary" Color="#9CA3AF"/>
+        <SolidColorBrush x:Key="BorderColor" Color="#1A1A1A"/>
 
         <Storyboard x:Key="FadeIn">
             <DoubleAnimation Storyboard.TargetProperty="Opacity"
@@ -41,9 +43,19 @@
                            From="0" To="1" Duration="0:0:0.3"/>
         </Storyboard>
 
+        <!-- Updated ActionCard Style -->
         <Style x:Key="ActionCard" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource CardBg}"/>
-            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#12141A" Offset="0"/>
+                        <GradientStop Color="#0A0D12" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#1A1F2E"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
             <Setter Property="Padding" Value="20"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
@@ -75,19 +87,19 @@
                         <BeginStoryboard>
                             <Storyboard>
                                 <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleX)"
-                                               To="1.02" Duration="0:0:0.2">
+                                               To="1.03" Duration="0:0:0.2">
                                     <DoubleAnimation.EasingFunction>
                                         <CubicEase EasingMode="EaseOut"/>
                                     </DoubleAnimation.EasingFunction>
                                 </DoubleAnimation>
                                 <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleY)"
-                                               To="1.02" Duration="0:0:0.2">
+                                               To="1.03" Duration="0:0:0.2">
                                     <DoubleAnimation.EasingFunction>
                                         <CubicEase EasingMode="EaseOut"/>
                                     </DoubleAnimation.EasingFunction>
                                 </DoubleAnimation>
                                 <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(TranslateTransform.Y)"
-                                               To="-5" Duration="0:0:0.2">
+                                               To="-3" Duration="0:0:0.2">
                                     <DoubleAnimation.EasingFunction>
                                         <CubicEase EasingMode="EaseOut"/>
                                     </DoubleAnimation.EasingFunction>
@@ -123,19 +135,24 @@
             </Style.Triggers>
         </Style>
 
+        <!-- Updated MenuButton Style -->
         <Style x:Key="MenuButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+            <Setter Property="Foreground" Value="#9CA3AF"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="15,12"/>
+            <Setter Property="Padding" Value="12,10"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Medium"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}" 
-                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                CornerRadius="8" 
+                                Padding="{TemplateBinding Padding}"
+                                BorderBrush="#1A1F2E"
+                                BorderThickness="0">
                             <ContentPresenter/>
                         </Border>
                     </ControlTemplate>
@@ -143,17 +160,28 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#2A2A2A"/>
-                    <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                    <Setter Property="Background" Value="#1A1F2E"/>
+                    <Setter Property="Foreground" Value="#FFFFFF"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
 
+        <!-- Close Button Style -->
+        <Style x:Key="CloseButton" TargetType="Button" BasedOn="{StaticResource MenuButton}">
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#EF4444"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Updated ScrollBar Styles -->
         <Style x:Key="ScrollBarThumb" TargetType="{x:Type Thumb}">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type Thumb}">
-                        <Border Background="#3B82F6" CornerRadius="4"/>
+                        <Border Background="#B31990FE" CornerRadius="4"/>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -161,12 +189,12 @@
 
         <Style TargetType="{x:Type ScrollBar}">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Width" Value="8"/>
+            <Setter Property="Width" Value="6"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type ScrollBar}">
                         <Grid>
-                            <Border Background="#1A1A1A" CornerRadius="4"/>
+                            <Border Background="#4D0A0F1E" CornerRadius="3"/>
                             <Track x:Name="PART_Track" IsDirectionReversed="True">
                                 <Track.Thumb>
                                     <Thumb Style="{StaticResource ScrollBarThumb}"/>
@@ -197,17 +225,42 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Gradient Text Style -->
+        <Style x:Key="GradientText" TargetType="TextBlock">
+            <Setter Property="Foreground">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#FFFFFF" Offset="0"/>
+                        <GradientStop Color="#B8C5D9" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Border Background="{StaticResource PrimaryBg}" CornerRadius="12">
+        <Border.Effect>
+            <DropShadowEffect Color="#000000" BlurRadius="30" ShadowDepth="0" Opacity="0.5"/>
+        </Border.Effect>
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="50"/>
+                <RowDefinition Height="56"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <Border Grid.Row="0" Background="{StaticResource SecondaryBg}" 
-                    CornerRadius="12,12,0,0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <!-- Title Bar with Backdrop Blur Effect -->
+            <Border Grid.Row="0" 
+                    CornerRadius="12,12,0,0" 
+                    MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"
+                    BorderBrush="#1A1F2E"
+                    BorderThickness="0,0,0,1">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#0A0F1E" Offset="0"/>
+                        <GradientStop Color="#070B14" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -215,110 +268,163 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Orientation="Horizontal" Margin="20,0">
-                        <TextBlock Text="N" FontSize="24" FontWeight="Bold" VerticalAlignment="Center" 
-                                   Margin="0,0,10,0" Foreground="#60A5FA" FontFamily="Segoe UI"/>
-                        <TextBlock Text="Nexor" FontSize="16" FontWeight="SemiBold" 
-                                   Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                    <!-- Logo and Title -->
+                    <StackPanel Orientation="Horizontal" Margin="20,0" VerticalAlignment="Center">
+                        <Border Background="#1990FE" Width="32" Height="32" CornerRadius="8" Margin="0,0,12,0">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#1990FE" BlurRadius="12" ShadowDepth="0" Opacity="0.4"/>
+                            </Border.Effect>
+                            <TextBlock Text="N" FontSize="18" FontWeight="Bold" 
+                                       Foreground="White" 
+                                       HorizontalAlignment="Center" 
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="Nexor" FontSize="15" FontWeight="SemiBold" 
+                                   Foreground="{StaticResource TextPrimary}" 
+                                   VerticalAlignment="Center"
+                                   Margin="0,1,0,0"/>
                     </StackPanel>
 
+                    <!-- Window Controls -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal">
-                        <Button Content="─" Style="{StaticResource MenuButton}" Click="MinimizeButton_Click" Width="45"/>
-                        <Button Content="□" Style="{StaticResource MenuButton}" Click="MaximizeButton_Click" Width="45"/>
-                        <Button Content="✕" Style="{StaticResource MenuButton}" Click="CloseButton_Click" Width="45"/>
+                        <Button Content="─" Style="{StaticResource MenuButton}" 
+                                Click="MinimizeButton_Click" Width="46" 
+                                FontSize="16" Padding="0"/>
+                        <Button Content="□" Style="{StaticResource MenuButton}" 
+                                Click="MaximizeButton_Click" Width="46" 
+                                FontSize="14" Padding="0"/>
+                        <Button Content="✕" Style="{StaticResource CloseButton}" 
+                                Click="CloseButton_Click" Width="46" 
+                                FontSize="16" Padding="0"/>
                     </StackPanel>
                 </Grid>
             </Border>
 
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="240"/>
+                    <ColumnDefinition Width="260"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Border Background="{StaticResource SecondaryBg}" CornerRadius="0,0,0,12">
+                <!-- Sidebar -->
+                <Border CornerRadius="0,0,0,12" BorderBrush="#1A1F2E" BorderThickness="0,0,1,0">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#0A0F1E" Offset="0"/>
+                            <GradientStop Color="#070B14" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <StackPanel Grid.Row="0" Margin="15">
-                            <Border Background="#3B82F6" CornerRadius="8" Padding="3" Margin="0,10,0,15">
-                                <Button x:Name="BtnFreshSetup" Style="{StaticResource MenuButton}" 
-                                        Background="#1E88E5" Margin="0" Click="BtnFreshSetup_Click">
+                        <StackPanel Grid.Row="0" Margin="15,20,15,15">
+                            <!-- Featured Button -->
+                            <Border CornerRadius="10" Margin="0,0,0,20" Padding="2">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#1990FE" Offset="0"/>
+                                        <GradientStop Color="#1565C0" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                                <Border.Effect>
+                                    <DropShadowEffect Color="#1990FE" BlurRadius="16" ShadowDepth="0" Opacity="0.3"/>
+                                </Border.Effect>
+                                <Button x:Name="BtnFreshSetup" Click="BtnFreshSetup_Click"
+                                        Background="#0D47A1" BorderThickness="0" Padding="12"
+                                        Cursor="Hand" HorizontalContentAlignment="Left">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" 
+                                                    CornerRadius="8" 
+                                                    Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Button.Template>
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="🚀" FontSize="18" Margin="0,0,10,0"/>
+                                        <TextBlock Text="🚀" FontSize="20" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                         <StackPanel>
-                                            <TextBlock x:Name="TxtFreshSetup" Text="Configuração Limpa" 
-                                                       FontWeight="Bold" Foreground="White"/>
-                                            <TextBlock x:Name="TxtFreshSetupSub" Text="PRINCIPAL" 
-                                                       FontSize="10" Foreground="#B3E5FC"/>
+                                            <TextBlock x:Name="TxtFreshSetup" Text="Fresh Setup" 
+                                                       FontWeight="SemiBold" 
+                                                       Foreground="White" 
+                                                       FontSize="13"/>
+                                            <TextBlock x:Name="TxtFreshSetupSub" Text="FEATURED" 
+                                                       FontSize="10" 
+                                                       Foreground="#90CAF9" 
+                                                       FontWeight="Bold"
+                                                       Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Button>
                             </Border>
 
+                            <!-- Menu Items -->
                             <Button x:Name="BtnDashboard" Style="{StaticResource MenuButton}" 
-                                    Margin="0,5" Click="BtnDashboard_Click">
+                                    Margin="0,0,0,4" Click="BtnDashboard_Click">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="🏠" FontSize="16" Margin="0,0,10,0"/>
-                                    <TextBlock x:Name="TxtDashboard" Text="Dashboard"/>
+                                    <TextBlock Text="🏠" FontSize="16" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtDashboard" Text="Dashboard" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
 
                             <Button x:Name="BtnProcesses" Style="{StaticResource MenuButton}" 
-                                    Margin="0,5" Click="BtnProcesses_Click">
+                                    Margin="0,0,0,4" Click="BtnProcesses_Click">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="⚙️" FontSize="16" Margin="0,0,10,0"/>
-                                    <TextBlock x:Name="TxtProcessesMenu" Text="Processos"/>
+                                    <TextBlock Text="⚙️" FontSize="16" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtProcessesMenu" Text="Processes" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
 
-                            <Button x:Name="BtnCleanup" Style="{StaticResource MenuButton}" Margin="0,5" Click="BtnCleanup_Click">
+                            <Button x:Name="BtnCleanup" Style="{StaticResource MenuButton}" 
+                                    Margin="0,0,0,4" Click="BtnCleanup_Click">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="🧹" FontSize="16" Margin="0,0,10,0"/>
-                                    <TextBlock x:Name="TxtCleanup" Text="Limpeza"/>
+                                    <TextBlock Text="🧹" FontSize="16" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtCleanup" Text="Cleanup" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
 
-                            <Button Style="{StaticResource MenuButton}" Margin="0,5">
+                            <Button Style="{StaticResource MenuButton}" Margin="0,0,0,4">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="⚡" FontSize="16" Margin="0,0,10,0"/>
-                                    <TextBlock x:Name="TxtPerformance" Text="Performance"/>
+                                    <TextBlock Text="⚡" FontSize="16" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtPerformance" Text="Performance" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
 
-                            <Button Style="{StaticResource MenuButton}" Margin="0,5">
+                            <Button Style="{StaticResource MenuButton}" Margin="0,0,0,4">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="🛡️" FontSize="16" Margin="0,0,10,0"/>
-                                    <TextBlock x:Name="TxtSecurity" Text="Segurança"/>
+                                    <TextBlock Text="🛡️" FontSize="16" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtSecurity" Text="Security" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
 
-                            <Separator Background="#333333" Margin="0,20,0,10"/>
+                            <!-- Divider -->
+                            <Rectangle Height="1" Fill="#1A1F2E" Margin="0,16,0,16"/>
 
-                            <Button Style="{StaticResource MenuButton}" Margin="0,5">
+                            <Button Style="{StaticResource MenuButton}" Margin="0,0,0,4">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="⚙️" FontSize="16" Margin="0,0,10,0"/>
-                                    <TextBlock x:Name="TxtSettings" Text="Configurações"/>
+                                    <TextBlock Text="⚙️" FontSize="16" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtSettings" Text="Settings" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>
 
+                        <!-- Language Selector -->
                         <StackPanel Grid.Row="1" Margin="15,10,15,20" Orientation="Horizontal" HorizontalAlignment="Center">
                             <Button x:Name="BtnLanguagePT" Click="BtnLanguagePT_Click" 
-                                Background="#2A2A2A" BorderThickness="0" Padding="10" Margin="5,0" 
-                                Width="55" Height="40" Cursor="Hand" ToolTip="Português">
+                                    Background="#1A1F2E" BorderThickness="0" Padding="10" Margin="5,0" 
+                                    Width="55" Height="40" Cursor="Hand" ToolTip="Português">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
-                                        <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
                                             <Viewbox Width="32" Height="22">
                                                 <Canvas Width="30" Height="20">
                                                     <Rectangle Width="12" Height="20" Fill="#006600"/>
                                                     <Rectangle Canvas.Left="12" Width="18" Height="20" Fill="#FF0000"/>
                                                     <Ellipse Canvas.Left="9" Canvas.Top="7" Width="6" Height="6" 
-                                                         Stroke="#FFD700" StrokeThickness="0.8" Fill="Transparent"/>
+                                                             Stroke="#FFD700" StrokeThickness="0.8" Fill="Transparent"/>
                                                 </Canvas>
                                             </Viewbox>
                                         </Border>
@@ -327,11 +433,11 @@
                             </Button>
 
                             <Button x:Name="BtnLanguageEN" Click="BtnLanguageEN_Click"
-                                Background="Transparent" BorderThickness="0" Padding="10" Margin="5,0" 
-                                Width="55" Height="40" Cursor="Hand" ToolTip="English">
+                                    Background="Transparent" BorderThickness="0" Padding="10" Margin="5,0" 
+                                    Width="55" Height="40" Cursor="Hand" ToolTip="English">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
-                                        <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
                                             <Viewbox Width="32" Height="22">
                                                 <Canvas Width="30" Height="20">
                                                     <Rectangle Width="30" Height="20" Fill="#012169"/>
@@ -353,29 +459,43 @@
                     </Grid>
                 </Border>
 
+                <!-- Main Content Area -->
                 <Grid Grid.Column="1">
                     <Frame x:Name="MainContentFrame" NavigationUIVisibility="Hidden" Visibility="Collapsed"/>
 
-                    <ScrollViewer x:Name="DashboardContent" VerticalScrollBarVisibility="Auto">
-                        <StackPanel Margin="25">
-                            <!-- 2. Welcome section -->
-                            <StackPanel Margin="0,0,0,20" Opacity="0">
+                    <ScrollViewer x:Name="DashboardContent" VerticalScrollBarVisibility="Auto" Padding="0,0,6,0">
+                        <StackPanel Margin="30,25,30,30">
+                            <!-- Welcome Section -->
+                            <StackPanel Margin="0,0,0,25" Opacity="0">
                                 <StackPanel.Triggers>
                                     <EventTrigger RoutedEvent="Loaded">
                                         <BeginStoryboard Storyboard="{StaticResource FadeIn}"/>
                                     </EventTrigger>
                                 </StackPanel.Triggers>
-                                <TextBlock x:Name="TxtWelcome" Text="Bem-vindo ao Nexor" 
-                                           FontSize="28" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
-                                <TextBlock x:Name="TxtWelcomeSub" Text="Otimize, limpe e acelere o seu PC" 
-                                           FontSize="13" Foreground="{StaticResource TextSecondary}" Margin="0,6,0,0"/>
+                                <TextBlock x:Name="TxtWelcome" 
+                                           Text="Welcome to Nexor" 
+                                           FontSize="32" 
+                                           FontWeight="Bold" 
+                                           Style="{StaticResource GradientText}"/>
+                                <TextBlock x:Name="TxtWelcomeSub" 
+                                           Text="Optimize, clean and speed up your PC" 
+                                           FontSize="14" 
+                                           Foreground="{StaticResource TextSecondary}" 
+                                           Margin="0,8,0,0"/>
                             </StackPanel>
 
-                            <!-- 3. System Health card -->
-                            <!-- System Health Card: Updated colors for a more harmonious look with the app's palette -->
-
-                            <Border Background="{StaticResource CardBg}" CornerRadius="16" Padding="24" Margin="0,0,0,18"
-        RenderTransformOrigin="0.5,0.5" Opacity="0">
+                            <!-- System Health Card -->
+                            <Border Background="{StaticResource CardBg}" 
+                                    CornerRadius="16" 
+                                    Padding="26" 
+                                    Margin="0,0,0,20"
+                                    BorderBrush="#1A1F2E"
+                                    BorderThickness="1"
+                                    RenderTransformOrigin="0.5,0.5" 
+                                    Opacity="0">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="#000000" BlurRadius="20" ShadowDepth="0" Opacity="0.3"/>
+                                </Border.Effect>
                                 <Border.RenderTransform>
                                     <ScaleTransform ScaleX="1" ScaleY="1"/>
                                 </Border.RenderTransform>
@@ -391,80 +511,156 @@
                                     </Grid.RowDefinitions>
 
                                     <StackPanel Grid.Row="0">
-                                        <TextBlock x:Name="TxtSystemHealth" Text="Saúde do Sistema" 
-                       FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
-                                        <TextBlock x:Name="TxtSystemHealthDesc" Text="O seu PC está em ótimo estado" 
-                       FontSize="13" Foreground="{StaticResource TextSecondary}" Margin="0,6,0,0"/>
+                                        <TextBlock x:Name="TxtSystemHealth" 
+                                                   Text="System Health" 
+                                                   FontSize="20" 
+                                                   FontWeight="Bold" 
+                                                   Foreground="{StaticResource TextPrimary}"/>
+                                        <TextBlock x:Name="TxtSystemHealthDesc" 
+                                                   Text="Your PC is in excellent condition" 
+                                                   FontSize="13" 
+                                                   Foreground="{StaticResource TextSecondary}" 
+                                                   Margin="0,6,0,0"/>
                                     </StackPanel>
 
-                                    <Grid Grid.Row="1" Margin="0,18,0,0">
+                                    <Grid Grid.Row="1" Margin="0,20,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <Border Grid.Column="0" Background="#000000" CornerRadius="12" Padding="18" Margin="0,0,10,0"
-                    BorderBrush="#3B82F6" BorderThickness="1">
+                                        <!-- CPU Card -->
+                                        <Border Grid.Column="0" 
+                                                CornerRadius="12" 
+                                                Padding="18" 
+                                                Margin="0,0,8,0"
+                                                BorderBrush="#1990FE"
+                                                BorderThickness="1">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                    <GradientStop Color="#0A0F1E" Offset="0"/>
+                                                    <GradientStop Color="#050812" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
                                             <Grid>
                                                 <Grid.RowDefinitions>
                                                     <RowDefinition Height="Auto"/>
                                                     <RowDefinition Height="*"/>
                                                 </Grid.RowDefinitions>
 
-                                                <TextBlock Grid.Row="0" Text="CPU" FontSize="10" Foreground="#FFFFFF" 
-                               Margin="0,0,0,12" FontWeight="SemiBold"/>
+                                                <TextBlock Grid.Row="0" 
+                                                           Text="CPU" 
+                                                           FontSize="10" 
+                                                           Foreground="#B39CA3AF" 
+                                                           Margin="0,0,0,12" 
+                                                           FontWeight="SemiBold"/>
 
                                                 <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom">
-                                                    <Border Background="Transparent" CornerRadius="8" Padding="8" Margin="0,0,10,0">
-                                                        <TextBlock Text="⚡" FontSize="20" VerticalAlignment="Center" Foreground="#FFFFFF"/>
+                                                    <Border Background="Transparent" CornerRadius="8" 
+                                                            Padding="8" 
+                                                            Margin="0,0,10,0">
+                                                        <TextBlock Text="⚡" 
+                                                                   FontSize="20" 
+                                                                   VerticalAlignment="Center" 
+                                                                   Foreground="#1990FE"/>
                                                     </Border>
-                                                    <TextBlock x:Name="TxtCPUStatus" Text="Normal" 
-                                   FontSize="17" Foreground="#FFFFFF" 
-                                   FontWeight="Bold" VerticalAlignment="Center"/>
+                                                    <TextBlock x:Name="TxtCPUStatus" 
+                                                               Text="Normal" 
+                                                               FontSize="17" 
+                                                               Foreground="#FFFFFF" 
+                                                               FontWeight="Bold" 
+                                                               VerticalAlignment="Center"/>
                                                 </StackPanel>
                                             </Grid>
                                         </Border>
 
-                                        <Border Grid.Column="1" Background="#000000" CornerRadius="12" Padding="18" Margin="0,0,10,0"
-                    BorderBrush="#3B82F6" BorderThickness="1">
+                                        <!-- RAM Card -->
+                                        <Border Grid.Column="1" 
+                                                CornerRadius="12" 
+                                                Padding="18" 
+                                                Margin="4,0"
+                                                BorderBrush="#1990FE"
+                                                BorderThickness="1">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                    <GradientStop Color="#0A0F1E" Offset="0"/>
+                                                    <GradientStop Color="#050812" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
                                             <Grid>
                                                 <Grid.RowDefinitions>
                                                     <RowDefinition Height="Auto"/>
                                                     <RowDefinition Height="*"/>
                                                 </Grid.RowDefinitions>
 
-                                                <TextBlock Grid.Row="0" Text="MEMÓRIA" FontSize="10" Foreground="#FFFFFF" 
-                               Margin="0,0,0,12" FontWeight="SemiBold"/>
+                                                <TextBlock Grid.Row="0" 
+                                                           Text="MEMORY" 
+                                                           FontSize="10" 
+                                                           Foreground="#B39CA3AF" 
+                                                           Margin="0,0,0,12" 
+                                                           FontWeight="SemiBold"/>
 
                                                 <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom">
-                                                    <Border Background="Transparent" CornerRadius="8" Padding="8" Margin="0,0,10,0">
-                                                        <TextBlock Text="💾" FontSize="20" VerticalAlignment="Center" Foreground="#FFFFFF"/>
+                                                    <Border Background="Transparent" 
+                                                            CornerRadius="8" 
+                                                            Padding="8" 
+                                                            Margin="0,0,10,0">
+                                                        <TextBlock Text="💾" 
+                                                                   FontSize="20" 
+                                                                   VerticalAlignment="Center" 
+                                                                   Foreground="#1990FE"/>
                                                     </Border>
-                                                    <TextBlock x:Name="TxtRAMStatus" Text="Bom" 
-                                   FontSize="17" Foreground="#FFFFFF" 
-                                   FontWeight="Bold" VerticalAlignment="Center"/>
+                                                    <TextBlock x:Name="TxtRAMStatus" 
+                                                               Text="Good" 
+                                                               FontSize="17" 
+                                                               Foreground="#FFFFFF" 
+                                                               FontWeight="Bold" 
+                                                               VerticalAlignment="Center"/>
                                                 </StackPanel>
                                             </Grid>
                                         </Border>
 
-                                        <Border Grid.Column="2" Background="#000000" CornerRadius="12" Padding="18"
-                    BorderBrush="#3B82F6" BorderThickness="1">
+                                        <!-- Performance Score Card -->
+                                        <Border Grid.Column="2" 
+                                                CornerRadius="12" 
+                                                Padding="18"
+                                                Margin="8,0,0,0"
+                                                BorderBrush="#1990FE"
+                                                BorderThickness="1">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                    <GradientStop Color="#0A0F1E" Offset="0"/>
+                                                    <GradientStop Color="#050812" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
                                             <Grid>
                                                 <Grid.RowDefinitions>
                                                     <RowDefinition Height="Auto"/>
                                                     <RowDefinition Height="*"/>
                                                 </Grid.RowDefinitions>
 
-                                                <TextBlock Grid.Row="0" Text="DESEMPENHO" FontSize="10" Foreground="#FFFFFF" 
-                               Margin="0,0,0,12" FontWeight="SemiBold"/>
+                                                <TextBlock Grid.Row="0" 
+                                                           Text="PERFORMANCE" 
+                                                           FontSize="10" 
+                                                           Foreground="#B39CA3AF" 
+                                                           Margin="0,0,0,12" 
+                                                           FontWeight="SemiBold"/>
 
                                                 <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom">
-                                                    <TextBlock x:Name="TxtHealthScore" Text="98" 
-                                   FontSize="32" Foreground="#FFFFFF" 
-                                   FontWeight="Black" VerticalAlignment="Center" Margin="0,0,2,0"/>
-                                                    <TextBlock Text="%" FontSize="16" Foreground="#FFFFFF" 
-                                   FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,0,4"/>
+                                                    <TextBlock x:Name="TxtHealthScore" 
+                                                               Text="98" 
+                                                               FontSize="32" 
+                                                               Foreground="#FFFFFF" 
+                                                               FontWeight="Black" 
+                                                               VerticalAlignment="Center" 
+                                                               Margin="0,0,2,0"/>
+                                                    <TextBlock Text="%" 
+                                                               FontSize="16" 
+                                                               Foreground="#1990FE" 
+                                                               FontWeight="Bold" 
+                                                               VerticalAlignment="Center" 
+                                                               Margin="0,0,0,4"/>
                                                 </StackPanel>
                                             </Grid>
                                         </Border>
@@ -472,12 +668,16 @@
                                 </Grid>
                             </Border>
 
-                            <TextBlock x:Name="TxtQuickActions" Text="Ações Rápidas" 
-                                       FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
-                                       Margin="0,8,0,15"/>
+                            <!-- Quick Actions Title -->
+                            <TextBlock x:Name="TxtQuickActions" 
+                                       Text="Quick Actions" 
+                                       FontSize="18" 
+                                       FontWeight="Bold" 
+                                       Foreground="{StaticResource TextPrimary}" 
+                                       Margin="0,5,0,18"/>
 
-                            <!-- Quick Actions Card Updates: Use similar colors with valid ARGB hex codes for WPF -->
-                            <Grid Margin="0,0,0,18">
+                            <!-- Quick Actions Grid -->
+                            <Grid Margin="0,0,0,20">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
@@ -488,167 +688,339 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <!-- Cleanup -->
-                                <Border Style="{StaticResource ActionCard}" Grid.Row="0" Grid.Column="0" 
-            Margin="0,0,10,8" MouseLeftButtonDown="CardCleanup_Click">
+                                <!-- Cleanup Card -->
+                                <Border Style="{StaticResource ActionCard}" 
+                                        Grid.Row="0" Grid.Column="0" 
+                                        Margin="0,0,8,8" 
+                                        MouseLeftButtonDown="CardCleanup_Click">
                                     <StackPanel>
-                                        <Border Background="#000000" BorderBrush="#3B82F6" BorderThickness="1" 
-                    Width="44" Height="44" CornerRadius="12" HorizontalAlignment="Left">
-                                            <TextBlock Text="🧹" FontSize="22" Foreground="#FFFFFF"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Border Width="46" Height="46" 
+                                                CornerRadius="12" 
+                                                HorizontalAlignment="Left"
+                                                BorderBrush="#1990FE"
+                                                BorderThickness="1">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                    <GradientStop Color="#1A1990FE" Offset="0"/>
+                                                    <GradientStop Color="#0D1565C0" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
+                                            <TextBlock Text="🧹" 
+                                                       FontSize="22" 
+                                                       HorizontalAlignment="Center" 
+                                                       VerticalAlignment="Center"/>
                                         </Border>
-                                        <TextBlock x:Name="TxtCardCleanup" Text="Limpeza" 
-                       FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" 
-                       Margin="0,12,0,4"/>
-                                        <TextBlock x:Name="TxtCardCleanupDesc" Text="Limpar ficheiros temporários" 
-                       FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                                        <TextBlock x:Name="TxtCardCleanup" 
+                                                   Text="Cleanup" 
+                                                   FontSize="15" 
+                                                   FontWeight="SemiBold" 
+                                                   Foreground="#FFFFFF" 
+                                                   Margin="0,14,0,6"/>
+                                        <TextBlock x:Name="TxtCardCleanupDesc" 
+                                                   Text="Clean temporary files" 
+                                                   FontSize="12" 
+                                                   Foreground="#CC9CA3AF" 
+                                                   TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
 
-                                <!-- Processes -->
-                                <Border Style="{StaticResource ActionCard}" Grid.Row="0" Grid.Column="1" 
-            Margin="5,0,5,8" MouseLeftButtonDown="CardProcesses_Click">
+                                <!-- Processes Card -->
+                                <Border Style="{StaticResource ActionCard}" 
+                                        Grid.Row="0" Grid.Column="1" 
+                                        Margin="4,0,4,8" 
+                                        MouseLeftButtonDown="CardProcesses_Click">
                                     <StackPanel>
-                                        <Border Background="#000000" BorderBrush="#3B82F6" BorderThickness="1" 
-                    Width="44" Height="44" CornerRadius="12" HorizontalAlignment="Left">
-                                            <TextBlock Text="⚙️" FontSize="22" Foreground="#FFFFFF"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Border Width="46" Height="46" 
+                                                CornerRadius="12" 
+                                                HorizontalAlignment="Left"
+                                                BorderBrush="#1990FE"
+                                                BorderThickness="1">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                    <GradientStop Color="#1A1990FE" Offset="0"/>
+                                                    <GradientStop Color="#0D1565C0" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
+                                            <TextBlock Text="⚙️" 
+                                                       FontSize="22" 
+                                                       HorizontalAlignment="Center" 
+                                                       VerticalAlignment="Center"/>
                                         </Border>
-                                        <TextBlock x:Name="TxtCardProcesses" Text="Processos" 
-                       FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" 
-                       Margin="0,12,0,4"/>
-                                        <TextBlock x:Name="TxtCardProcessesDesc" Text="Gerir aplicações ativas" 
-                       FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                                        <TextBlock x:Name="TxtCardProcesses" 
+                                                   Text="Processes" 
+                                                   FontSize="15" 
+                                                   FontWeight="SemiBold" 
+                                                   Foreground="#FFFFFF" 
+                                                   Margin="0,14,0,6"/>
+                                        <TextBlock x:Name="TxtCardProcessesDesc" 
+                                                   Text="Manage active applications" 
+                                                   FontSize="12" 
+                                                   Foreground="#CC9CA3AF" 
+                                                   TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
 
-                                <!-- Security -->
-                                <Border Style="{StaticResource ActionCard}" Grid.Row="0" Grid.Column="2" 
-            Margin="10,0,0,8" MouseLeftButtonDown="CardSecurity_Click">
+                                <!-- Security Card -->
+                                <Border Style="{StaticResource ActionCard}" 
+                                        Grid.Row="0" Grid.Column="2" 
+                                        Margin="8,0,0,8" 
+                                        MouseLeftButtonDown="CardSecurity_Click">
                                     <StackPanel>
-                                        <Border Background="#000000" BorderBrush="#3B82F6" BorderThickness="1" 
-                    Width="44" Height="44" CornerRadius="12" HorizontalAlignment="Left">
-                                            <TextBlock Text="🛡️" FontSize="22" Foreground="#FFFFFF"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Border Width="46" Height="46" 
+                                                CornerRadius="12" 
+                                                HorizontalAlignment="Left"
+                                                BorderBrush="#1990FE"
+                                                BorderThickness="1">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                    <GradientStop Color="#1A1990FE" Offset="0"/>
+                                                    <GradientStop Color="#0D1565C0" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
+                                            <TextBlock Text="🛡️" 
+                                                       FontSize="22" 
+                                                       HorizontalAlignment="Center" 
+                                                       VerticalAlignment="Center"/>
                                         </Border>
-                                        <TextBlock x:Name="TxtCardSecurity" Text="Segurança" 
-                       FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" 
-                       Margin="0,12,0,4"/>
-                                        <TextBlock x:Name="TxtCardSecurityDesc" Text="Verificar proteção do sistema" 
-                       FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                                        <TextBlock x:Name="TxtCardSecurity" 
+                                                   Text="Security" 
+                                                   FontSize="15" 
+                                                   FontWeight="SemiBold" 
+                                                   Foreground="#FFFFFF" 
+                                                   Margin="0,14,0,6"/>
+                                        <TextBlock x:Name="TxtCardSecurityDesc" 
+                                                   Text="Check system protection" 
+                                                   FontSize="12" 
+                                                   Foreground="#CC9CA3AF" 
+                                                   TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
 
-                                <!-- Performance -->
-                                <Border Style="{StaticResource ActionCard}" Grid.Row="1" Grid.Column="0" 
-            Margin="0,0,10,0" MouseLeftButtonDown="CardPerformance_Click">
+                                <!-- Performance Card -->
+                                <Border Style="{StaticResource ActionCard}" 
+                                        Grid.Row="1" Grid.Column="0" 
+                                        Margin="0,0,8,0" 
+                                        MouseLeftButtonDown="CardPerformance_Click">
                                     <StackPanel>
-                                        <Border Background="#000000" BorderBrush="#3B82F6" BorderThickness="1" 
-                    Width="44" Height="44" CornerRadius="12" HorizontalAlignment="Left">
-                                            <TextBlock Text="⚡" FontSize="22" Foreground="#FFFFFF"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Border Width="46" Height="46" 
+                                                CornerRadius="12" 
+                                                HorizontalAlignment="Left"
+                                                BorderBrush="#1990FE"
+                                                BorderThickness="1">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                    <GradientStop Color="#1A1990FE" Offset="0"/>
+                                                    <GradientStop Color="#0D1565C0" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
+                                            <TextBlock Text="⚡" 
+                                                       FontSize="22" 
+                                                       HorizontalAlignment="Center" 
+                                                       VerticalAlignment="Center"/>
                                         </Border>
-                                        <TextBlock x:Name="TxtCardPerformance" Text="Performance Boost" 
-                       FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" 
-                       Margin="0,12,0,4"/>
-                                        <TextBlock x:Name="TxtCardPerformanceDesc" Text="Libertar memória RAM" 
-                       FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                                        <TextBlock x:Name="TxtCardPerformance" 
+                                                   Text="Performance Boost" 
+                                                   FontSize="15" 
+                                                   FontWeight="SemiBold" 
+                                                   Foreground="#FFFFFF" 
+                                                   Margin="0,14,0,6"/>
+                                        <TextBlock x:Name="TxtCardPerformanceDesc" 
+                                                   Text="Free up RAM memory" 
+                                                   FontSize="12" 
+                                                   Foreground="#CC9CA3AF" 
+                                                   TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
 
-                                <!-- Storage -->
-                                <Border Style="{StaticResource ActionCard}" Grid.Row="1" Grid.Column="1" 
-            Margin="5,0,5,0" MouseLeftButtonDown="CardStorage_Click">
+                                <!-- Storage Card -->
+                                <Border Style="{StaticResource ActionCard}" 
+                                        Grid.Row="1" Grid.Column="1" 
+                                        Margin="4,0" 
+                                        MouseLeftButtonDown="CardStorage_Click">
                                     <StackPanel>
-                                        <Border Background="#000000" BorderBrush="#3B82F6" BorderThickness="1" 
-                    Width="44" Height="44" CornerRadius="12" HorizontalAlignment="Left">
-                                            <TextBlock Text="💾" FontSize="22" Foreground="#FFFFFF"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Border Width="46" Height="46" 
+                                                CornerRadius="12" 
+                                                HorizontalAlignment="Left"
+                                                BorderBrush="#1990FE"
+                                                BorderThickness="1">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                    <GradientStop Color="#1A1990FE" Offset="0"/>
+                                                    <GradientStop Color="#0D1565C0" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
+                                            <TextBlock Text="💾" 
+                                                       FontSize="22" 
+                                                       HorizontalAlignment="Center" 
+                                                       VerticalAlignment="Center"/>
                                         </Border>
-                                        <TextBlock x:Name="TxtCardStorage" Text="Armazenamento" 
-                       FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" 
-                       Margin="0,12,0,4"/>
-                                        <TextBlock x:Name="TxtCardStorageDesc" Text="Analisar espaço em disco" 
-                       FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                                        <TextBlock x:Name="TxtCardStorage" 
+                                                   Text="Storage" 
+                                                   FontSize="15" 
+                                                   FontWeight="SemiBold" 
+                                                   Foreground="#FFFFFF" 
+                                                   Margin="0,14,0,6"/>
+                                        <TextBlock x:Name="TxtCardStorageDesc" 
+                                                   Text="Analyze disk space" 
+                                                   FontSize="12" 
+                                                   Foreground="#CC9CA3AF" 
+                                                   TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
 
-                                <!-- Updates -->
-                                <Border Style="{StaticResource ActionCard}" Grid.Row="1" Grid.Column="2" 
-            Margin="10,0,0,0" MouseLeftButtonDown="CardUpdates_Click">
+                                <!-- Updates Card -->
+                                <Border Style="{StaticResource ActionCard}" 
+                                        Grid.Row="1" Grid.Column="2" 
+                                        Margin="8,0,0,0" 
+                                        MouseLeftButtonDown="CardUpdates_Click">
                                     <StackPanel>
-                                        <Border Background="#000000" BorderBrush="#3B82F6" BorderThickness="1" 
-                    Width="44" Height="44" CornerRadius="12" HorizontalAlignment="Left">
-                                            <TextBlock Text="🔄" FontSize="22" Foreground="#FFFFFF"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Border Width="46" Height="46" 
+                                                CornerRadius="12" 
+                                                HorizontalAlignment="Left"
+                                                BorderBrush="#1990FE"
+                                                BorderThickness="1">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                    <GradientStop Color="#1A1990FE" Offset="0"/>
+                                                    <GradientStop Color="#0D1565C0" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
+                                            <TextBlock Text="🔄" 
+                                                       FontSize="22" 
+                                                       HorizontalAlignment="Center" 
+                                                       VerticalAlignment="Center"/>
                                         </Border>
-                                        <TextBlock x:Name="TxtCardUpdates" Text="Atualizações" 
-                       FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" 
-                       Margin="0,12,0,4"/>
-                                        <TextBlock x:Name="TxtCardUpdatesDesc" Text="Windows Update" 
-                       FontSize="11" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                                        <TextBlock x:Name="TxtCardUpdates" 
+                                                   Text="Updates" 
+                                                   FontSize="15" 
+                                                   FontWeight="SemiBold" 
+                                                   Foreground="#FFFFFF" 
+                                                   Margin="0,14,0,6"/>
+                                        <TextBlock x:Name="TxtCardUpdatesDesc" 
+                                                   Text="Windows Update" 
+                                                   FontSize="12" 
+                                                   Foreground="#CC9CA3AF" 
+                                                   TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
                             </Grid>
 
-                            <TextBlock x:Name="TxtSystemInfo" Text="Informação do Sistema" 
-                                       FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
+                            <!-- System Information Title -->
+                            <TextBlock x:Name="TxtSystemInfo" 
+                                       Text="System Information" 
+                                       FontSize="20" 
+                                       FontWeight="Bold" 
+                                       Foreground="{StaticResource TextPrimary}" 
                                        Margin="0,10,0,20"/>
 
+                            <!-- System Info Cards -->
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
 
-                                <Border Background="{StaticResource CardBg}" CornerRadius="16" 
-                                        Padding="24" Margin="0,0,10,0">
+                                <!-- Left Info Card -->
+                                <Border Background="{StaticResource CardBg}" 
+                                        CornerRadius="16" 
+                                        Padding="24" 
+                                        Margin="0,0,8,0"
+                                        BorderBrush="#1A1F2E"
+                                        BorderThickness="1">
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="#000000" BlurRadius="15" ShadowDepth="0" Opacity="0.2"/>
+                                    </Border.Effect>
                                     <StackPanel>
                                         <StackPanel Margin="0,0,0,20">
-                                            <TextBlock Text="Sistema Operativo" FontSize="11" 
-                                                       Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5"/>
-                                            <TextBlock x:Name="TxtOS" Text="Windows 11 Pro" 
-                                                       FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                            <TextBlock Text="Operating System" 
+                                                       FontSize="11" 
+                                                       Foreground="#B39CA3AF" 
+                                                       Margin="0,0,0,6"
+                                                       FontWeight="Medium"/>
+                                            <TextBlock x:Name="TxtOS" 
+                                                       Text="Windows 11 Pro" 
+                                                       FontSize="14" 
+                                                       FontWeight="SemiBold" 
+                                                       Foreground="{StaticResource TextPrimary}"/>
                                         </StackPanel>
 
                                         <StackPanel Margin="0,0,0,20">
-                                            <TextBlock Text="Processador" FontSize="11" 
-                                                       Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5"/>
-                                            <TextBlock x:Name="TxtCPU" Text="Intel Core i7" 
-                                                       FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                            <TextBlock Text="Processor" 
+                                                       FontSize="11" 
+                                                       Foreground="#B39CA3AF" 
+                                                       Margin="0,0,0,6"
+                                                       FontWeight="Medium"/>
+                                            <TextBlock x:Name="TxtCPU" 
+                                                       Text="Intel Core i7" 
+                                                       FontSize="14" 
+                                                       FontWeight="SemiBold" 
+                                                       Foreground="{StaticResource TextPrimary}"/>
                                         </StackPanel>
 
                                         <StackPanel>
-                                            <TextBlock Text="Placa Gráfica" FontSize="11" 
-                                                       Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5"/>
-                                            <TextBlock x:Name="TxtGPU" Text="NVIDIA GeForce RTX" 
-                                                       FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                            <TextBlock Text="Graphics Card" 
+                                                       FontSize="11" 
+                                                       Foreground="#B39CA3AF" 
+                                                       Margin="0,0,0,6"
+                                                       FontWeight="Medium"/>
+                                            <TextBlock x:Name="TxtGPU" 
+                                                       Text="NVIDIA GeForce RTX" 
+                                                       FontSize="14" 
+                                                       FontWeight="SemiBold" 
+                                                       Foreground="{StaticResource TextPrimary}"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
 
-                                <Border Grid.Column="1" Background="{StaticResource CardBg}" 
-                                        CornerRadius="16" Padding="24" Margin="10,0,0,0">
+                                <!-- Right Info Card -->
+                                <Border Grid.Column="1" 
+                                        Background="{StaticResource CardBg}" 
+                                        CornerRadius="16" 
+                                        Padding="24" 
+                                        Margin="8,0,0,0"
+                                        BorderBrush="#1A1F2E"
+                                        BorderThickness="1">
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="#000000" BlurRadius="15" ShadowDepth="0" Opacity="0.2"/>
+                                    </Border.Effect>
                                     <StackPanel>
                                         <StackPanel Margin="0,0,0,20">
-                                            <TextBlock Text="Memória RAM" FontSize="11" 
-                                                       Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5"/>
-                                            <TextBlock x:Name="TxtRAM" Text="16 GB DDR4" 
-                                                       FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                            <TextBlock Text="Memory" 
+                                                       FontSize="11" 
+                                                       Foreground="#B39CA3AF" 
+                                                       Margin="0,0,0,6"
+                                                       FontWeight="Medium"/>
+                                            <TextBlock x:Name="TxtRAM" 
+                                                       Text="16 GB DDR4" 
+                                                       FontSize="14" 
+                                                       FontWeight="SemiBold" 
+                                                       Foreground="{StaticResource TextPrimary}"/>
                                         </StackPanel>
 
                                         <StackPanel Margin="0,0,0,20">
-                                            <TextBlock Text="Armazenamento" FontSize="11" 
-                                                       Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5"/>
-                                            <TextBlock x:Name="TxtStorage" Text="512 GB NVMe SSD" 
-                                                       FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                            <TextBlock Text="Storage" 
+                                                       FontSize="11" 
+                                                       Foreground="#B39CA3AF" 
+                                                       Margin="0,0,0,6"
+                                                       FontWeight="Medium"/>
+                                            <TextBlock x:Name="TxtStorage" 
+                                                       Text="512 GB NVMe SSD" 
+                                                       FontSize="14" 
+                                                       FontWeight="SemiBold" 
+                                                       Foreground="{StaticResource TextPrimary}"/>
                                         </StackPanel>
 
                                         <StackPanel>
-                                            <TextBlock Text="Arquitetura" FontSize="11" 
-                                                       Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5"/>
-                                            <TextBlock x:Name="TxtArch" Text="64-bit" 
-                                                       FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                            <TextBlock Text="Architecture" 
+                                                       FontSize="11" 
+                                                       Foreground="#B39CA3AF" 
+                                                       Margin="0,0,0,6"
+                                                       FontWeight="Medium"/>
+                                            <TextBlock x:Name="TxtArch" 
+                                                       Text="64-bit" 
+                                                       FontSize="14" 
+                                                       FontWeight="SemiBold" 
+                                                       Foreground="{StaticResource TextPrimary}"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
@@ -656,33 +1028,81 @@
                         </StackPanel>
                     </ScrollViewer>
 
-                    <Border x:Name="CleanupOverlay" Background="#DD000000" Visibility="Collapsed">
-                        <Border Background="{StaticResource CardBg}" CornerRadius="20" 
-                                Width="450" Height="350" VerticalAlignment="Center" HorizontalAlignment="Center"
-                                RenderTransformOrigin="0.5,0.5">
+                    <!-- Overlay Modal -->
+                    <Border x:Name="CleanupOverlay" 
+                            Background="#E5000000" 
+                            Visibility="Collapsed">
+                        <Border CornerRadius="20" 
+                                Width="480" 
+                                Height="380" 
+                                VerticalAlignment="Center" 
+                                HorizontalAlignment="Center"
+                                RenderTransformOrigin="0.5,0.5"
+                                BorderBrush="#1A1F2E"
+                                BorderThickness="1">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#0F1419" Offset="0"/>
+                                    <GradientStop Color="#0A0F1E" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Border.Effect>
+                                <DropShadowEffect Color="#000000" BlurRadius="40" ShadowDepth="0" Opacity="0.6"/>
+                            </Border.Effect>
                             <Border.RenderTransform>
                                 <ScaleTransform ScaleX="1" ScaleY="1"/>
                             </Border.RenderTransform>
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40">
-                                <Border Background="#3B82F620" CornerRadius="50" Width="80" Height="80" 
-                                        HorizontalAlignment="Center" Margin="0,0,0,25">
-                                    <TextBlock x:Name="OverlayIcon" Text="⚡" FontSize="40" 
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border CornerRadius="60" 
+                                        Width="90" 
+                                        Height="90" 
+                                        HorizontalAlignment="Center" 
+                                        Margin="0,0,0,28"
+                                        BorderBrush="#1990FE"
+                                        BorderThickness="2">
+                                    <Border.Background>
+                                        <RadialGradientBrush>
+                                            <GradientStop Color="#261990FE" Offset="0"/>
+                                            <GradientStop Color="Transparent" Offset="1"/>
+                                        </RadialGradientBrush>
+                                    </Border.Background>
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="#1990FE" BlurRadius="20" ShadowDepth="0" Opacity="0.4"/>
+                                    </Border.Effect>
+                                    <TextBlock x:Name="OverlayIcon" 
+                                               Text="⚡" 
+                                               FontSize="42" 
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center"/>
                                 </Border>
 
-                                <TextBlock x:Name="OverlayStatus" Text="A processar..." 
-                                           FontSize="20" Foreground="{StaticResource TextPrimary}" 
-                                           HorizontalAlignment="Center" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                <TextBlock x:Name="OverlayStatus" 
+                                           Text="Processing..." 
+                                           FontSize="22" 
+                                           Foreground="{StaticResource TextPrimary}" 
+                                           HorizontalAlignment="Center" 
+                                           FontWeight="SemiBold" 
+                                           Margin="0,0,0,12"/>
 
-                                <TextBlock x:Name="OverlayProgress" Text="" 
-                                           FontSize="14" Foreground="{StaticResource TextSecondary}" 
-                                           HorizontalAlignment="Center" Margin="0,0,0,25"
-                                           TextWrapping="Wrap" TextAlignment="Center" MaxWidth="350"/>
+                                <TextBlock x:Name="OverlayProgress" 
+                                           Text="" 
+                                           FontSize="14" 
+                                           Foreground="{StaticResource TextSecondary}" 
+                                           HorizontalAlignment="Center" 
+                                           Margin="0,0,0,28"
+                                           TextWrapping="Wrap" 
+                                           TextAlignment="Center" 
+                                           MaxWidth="380"
+                                           LineHeight="22"/>
 
-                                <ProgressBar x:Name="OverlayProgressBar" Width="350" Height="6" 
-                                             Background="#2A2A2A" Foreground="{StaticResource AccentBlue}" 
-                                             IsIndeterminate="True" Style="{StaticResource RoundedProgressBar}"/>
-                            </StackPanel>                                                                                                           
+                                <ProgressBar x:Name="OverlayProgressBar" 
+                                             Width="380" 
+                                             Height="6" 
+                                             Background="#1A1F2E" 
+                                             Foreground="{StaticResource AccentBlue}" 
+                                             IsIndeterminate="True" 
+                                             Style="{StaticResource RoundedProgressBar}"/>
+                            </StackPanel>
                         </Border>
                     </Border>
                 </Grid>
