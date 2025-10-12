@@ -14,7 +14,7 @@ namespace Nexor
 {
     public partial class MainWindow : Window
     {
-        private string _currentLanguage = "PT";
+        private string _currentLanguage = "EN";
         private DispatcherTimer _systemMonitorTimer;
         private PerformanceCounter _cpuCounter;
         private PerformanceCounter _ramCounter;
@@ -29,6 +29,7 @@ namespace Nexor
         public MainWindow()
         {
             InitializeComponent();
+            InitializeLanguage();
             LoadSystemInfo();
             InitializeSystemMonitor();
         }
@@ -54,6 +55,12 @@ namespace Nexor
             catch { }
         }
 
+        private void InitializeLanguage()
+        {
+            BtnLanguageEN.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1A1F2E"));
+            BtnLanguagePT.Background = Brushes.Transparent;
+            UpdateLanguage();
+        }
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ClickCount == 2)
@@ -191,6 +198,7 @@ namespace Nexor
         {
             if (_currentLanguage == "PT")
             {
+                // Menu Items
                 TxtFreshSetup.Text = "Configuração Limpa";
                 TxtFreshSetupSub.Text = "PRINCIPAL";
                 TxtDashboard.Text = "Dashboard";
@@ -200,11 +208,15 @@ namespace Nexor
                 TxtSecurity.Text = "Segurança";
                 TxtSettings.Text = "Configurações";
 
+                // Welcome Section
                 TxtWelcome.Text = "Bem-vindo ao Nexor";
                 TxtWelcomeSub.Text = "Otimize, limpe e acelere o seu PC";
+
+                // System Overview Section
                 TxtSystemHealth.Text = "Visão Geral do Sistema";
                 TxtSystemHealthDesc.Text = "Monitorização em tempo real do seu sistema";
 
+                // Quick Actions
                 TxtQuickActions.Text = "Ações Rápidas";
                 TxtCardCleanup.Text = "Limpeza";
                 TxtCardCleanupDesc.Text = "Limpar ficheiros temporários";
@@ -219,10 +231,18 @@ namespace Nexor
                 TxtCardUpdates.Text = "Atualizações";
                 TxtCardUpdatesDesc.Text = "Windows Update";
 
+                // System Information
                 TxtSystemInfo.Text = "Informação do Sistema";
+                TxtLabelOS.Text = "Sistema Operativo";
+                TxtLabelCPU.Text = "Processador";
+                TxtLabelGPU.Text = "Placa Gráfica";
+                TxtLabelRAM.Text = "Memória";
+                TxtLabelStorage.Text = "Armazenamento";
+                TxtLabelArch.Text = "Arquitetura";
             }
             else
             {
+                // Menu Items
                 TxtFreshSetup.Text = "Fresh Setup";
                 TxtFreshSetupSub.Text = "FEATURED";
                 TxtDashboard.Text = "Dashboard";
@@ -232,11 +252,15 @@ namespace Nexor
                 TxtSecurity.Text = "Security";
                 TxtSettings.Text = "Settings";
 
+                // Welcome Section
                 TxtWelcome.Text = "Welcome to Nexor";
                 TxtWelcomeSub.Text = "Optimize, clean and speed up your PC";
+
+                // System Overview Section
                 TxtSystemHealth.Text = "System Overview";
                 TxtSystemHealthDesc.Text = "Real-time monitoring of your system";
 
+                // Quick Actions
                 TxtQuickActions.Text = "Quick Actions";
                 TxtCardCleanup.Text = "Cleanup";
                 TxtCardCleanupDesc.Text = "Clean temporary files";
@@ -251,7 +275,14 @@ namespace Nexor
                 TxtCardUpdates.Text = "Updates";
                 TxtCardUpdatesDesc.Text = "Windows Update";
 
+                // System Information
                 TxtSystemInfo.Text = "System Information";
+                TxtLabelOS.Text = "Operating System";
+                TxtLabelCPU.Text = "Processor";
+                TxtLabelGPU.Text = "Graphics Card";
+                TxtLabelRAM.Text = "Memory";
+                TxtLabelStorage.Text = "Storage";
+                TxtLabelArch.Text = "Architecture";
             }
         }
 

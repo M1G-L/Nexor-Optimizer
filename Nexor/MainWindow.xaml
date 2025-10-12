@@ -983,7 +983,8 @@
                                     </Border.Effect>
                                     <StackPanel>
                                         <StackPanel Margin="0,0,0,20">
-                                            <TextBlock Text="Operating System" 
+                                            <TextBlock x:Name="TxtLabelOS"
+                                                       Text="Operating System" 
                                                        FontSize="11" 
                                                        Foreground="#B39CA3AF" 
                                                        Margin="0,0,0,6"
@@ -996,7 +997,8 @@
                                         </StackPanel>
 
                                         <StackPanel Margin="0,0,0,20">
-                                            <TextBlock Text="Processor" 
+                                            <TextBlock x:Name="TxtLabelCPU"
+                                                       Text="Processor" 
                                                        FontSize="11" 
                                                        Foreground="#B39CA3AF" 
                                                        Margin="0,0,0,6"
@@ -1009,7 +1011,8 @@
                                         </StackPanel>
 
                                         <StackPanel>
-                                            <TextBlock Text="Graphics Card" 
+                                            <TextBlock x:Name="TxtLabelGPU"
+                                                       Text="Graphics Card" 
                                                        FontSize="11" 
                                                        Foreground="#B39CA3AF" 
                                                        Margin="0,0,0,6"
@@ -1036,7 +1039,8 @@
                                     </Border.Effect>
                                     <StackPanel>
                                         <StackPanel Margin="0,0,0,20">
-                                            <TextBlock Text="Memory" 
+                                            <TextBlock x:Name="TxtLabelRAM"
+                                                       Text="Memory" 
                                                        FontSize="11" 
                                                        Foreground="#B39CA3AF" 
                                                        Margin="0,0,0,6"
@@ -1049,7 +1053,8 @@
                                         </StackPanel>
 
                                         <StackPanel Margin="0,0,0,20">
-                                            <TextBlock Text="Storage" 
+                                            <TextBlock x:Name="TxtLabelStorage"
+                                                       Text="Storage" 
                                                        FontSize="11" 
                                                        Foreground="#B39CA3AF" 
                                                        Margin="0,0,0,6"
@@ -1062,7 +1067,8 @@
                                         </StackPanel>
 
                                         <StackPanel>
-                                            <TextBlock Text="Architecture" 
+                                            <TextBlock x:Name="TxtLabelArch"
+                                                       Text="Architecture" 
                                                        FontSize="11" 
                                                        Foreground="#B39CA3AF" 
                                                        Margin="0,0,0,6"
