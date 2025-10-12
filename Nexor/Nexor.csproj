@@ -21,6 +21,12 @@
 		<PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.9" />
 	</ItemGroup>
 
+	<!-- Add UI Automation References -->
+	<ItemGroup>
+		<Reference Include="UIAutomationClient" />
+		<Reference Include="UIAutomationTypes" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<Resource Include="nexor.ico" />
 	</ItemGroup>
