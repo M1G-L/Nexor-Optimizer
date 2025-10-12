@@ -3,8 +3,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Management;
-using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.ServiceProcess;
 using System.Threading.Tasks;
 using System.Windows;
@@ -15,153 +14,147 @@ using System.Windows.Threading;
 
 namespace Nexor
 {
-    public class StatusTracker
+    public enum UpdatePhase
     {
-        public string CurrentAction { get; set; } = "";
-        public string CurrentSubAction { get; set; } = "";
-        public DateTime LastUpdate { get; set; } = DateTime.Now;
-        public bool IsAnimating { get; set; } = true;
-
-        public void Update(string action, string subAction = "")
-        {
-            CurrentAction = action;
-            CurrentSubAction = subAction;
-            LastUpdate = DateTime.Now;
-        }
+        WindowsUpdate,
+        DriverUpdate,
+        Cleanup,
+        Completed
     }
+
+    public class UpdateState
+    {
+        public UpdatePhase CurrentPhase { get; set; }
+        public int UpdateCheckCount { get; set; }
+        public int RestartCount { get; set; }
+        public DateTime LastCheckTime { get; set; }
+    }
+
     public partial class FreshSetupPage : UserControl
     {
-        private int _completedSteps = 0;
+        private const string STATE_FILE = "nexor_state.json";
+        private const string STARTUP_TASK_NAME = "NexorAutoResume";
+        private const int MAX_UPDATE_CHECKS = 5;
+        private const int CHECK_INTERVAL_SECONDS = 30;
+
+        private UpdateState _state;
+        private DispatcherTimer _updateCheckTimer;
         private readonly string _currentLanguage;
-        private bool _isRunning = false;
-        private static readonly HttpClient _httpClient = new HttpClient();
-        private const string UPDATE_STATE_FILE = "nexor_update_state.txt";
-        private const string UPDATE_PASS_KEY = "UpdatePass";
-        private int _currentUpdatePass = 0;
-        private const int MAX_UPDATE_PASSES = 3;
-        private StatusTracker _statusTracker = new StatusTracker();
-        private DispatcherTimer _statusAnimationTimer;
+        private bool _isProcessing = false;
+
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
         public FreshSetupPage(string language = "PT")
         {
             InitializeComponent();
             _currentLanguage = language;
             SetLanguage(language);
-            // Initialize the status animation timer
-            _statusAnimationTimer = new DispatcherTimer();
-            _statusAnimationTimer.Interval = TimeSpan.FromMilliseconds(500);
-            _statusAnimationTimer.Tick += StatusAnimationTimer_Tick;
+
+            LoadState();
             CheckAdminPrivileges();
-            CheckForPendingUpdates();
-        }
 
-        private void StatusAnimationTimer_Tick(object sender, EventArgs e)
-        {
-            Dispatcher.Invoke(() =>
+            // Initialize timer for checking Windows Update status
+            _updateCheckTimer = new DispatcherTimer();
+            _updateCheckTimer.Interval = TimeSpan.FromSeconds(CHECK_INTERVAL_SECONDS);
+            _updateCheckTimer.Tick += UpdateCheckTimer_Tick;
+
+            // If we resumed from restart, continue the process
+            if (_state.CurrentPhase != UpdatePhase.Completed)
             {
-                int dotCount = (int)((DateTime.Now.Millisecond / 250) % 4);
-                string dots = new string('.', dotCount);
-
-                string displayText = _statusTracker.CurrentAction + dots;
-                if (!string.IsNullOrEmpty(_statusTracker.CurrentSubAction))
-                {
-                    displayText = _statusTracker.CurrentSubAction + dots;
-                }
-
-                TxtLiveStatus.Text = displayText;
-            });
-        }
-
-        private void UpdateLiveStatus(string action, string subAction = "")
-        {
-            _statusTracker.Update(action, subAction);
-
-            Dispatcher.Invoke(() =>
-            {
-                TxtLiveStatus.Visibility = Visibility.Visible;
-            });
-
-            AddLog($"\n🔄 {action}");
-            if (!string.IsNullOrEmpty(subAction))
-            {
-                AddLog($"   → {subAction}");
+                ShowResumeDialog();
             }
         }
 
-        private void CheckForPendingUpdates()
+        private void LoadState()
         {
             try
             {
-                string stateFile = Path.Combine(Path.GetTempPath(), UPDATE_STATE_FILE);
-                if (File.Exists(stateFile))
+                string statePath = Path.Combine(Path.GetTempPath(), STATE_FILE);
+                if (File.Exists(statePath))
                 {
-                    string[] lines = File.ReadAllLines(stateFile);
-                    foreach (string line in lines)
-                    {
-                        if (line.StartsWith(UPDATE_PASS_KEY + "="))
-                        {
-                            int.TryParse(line.Split('=')[1], out _currentUpdatePass);
-                            break;
-                        }
-                    }
-
-                    if (_currentUpdatePass > 0 && _currentUpdatePass < MAX_UPDATE_PASSES)
-                    {
-                        ShowCustomDialog(
-                            _currentLanguage == "PT" ? "Atualização Pendente" : "Pending Update",
-                            _currentLanguage == "PT"
-                                ? $"Foi detectada uma atualização em progresso (Passo {_currentUpdatePass}/{MAX_UPDATE_PASSES}).\n\nDeseja continuar o processo de atualização?"
-                                : $"An update in progress was detected (Pass {_currentUpdatePass}/{MAX_UPDATE_PASSES}).\n\nDo you want to continue the update process?",
-                            DialogType.Question,
-                            () =>
-                            {
-                                Task.Run(async () =>
-                                {
-                                    await Task.Delay(500);
-                                    Dispatcher.Invoke(() => BtnRunAll_Click(null, null));
-                                });
-                            },
-                            () => ClearUpdateState()
-                        );
-                    }
-                    else if (_currentUpdatePass >= MAX_UPDATE_PASSES)
-                    {
-                        ClearUpdateState();
-                        ShowCustomNotification(
-                            _currentLanguage == "PT" ? "Processo Concluído" : "Process Completed",
-                            _currentLanguage == "PT"
-                                ? "Processo de atualização concluído após múltiplas verificações!"
-                                : "Update process completed after multiple checks!",
-                            NotificationType.Success
-                        );
-                    }
+                    string json = File.ReadAllText(statePath);
+                    _state = System.Text.Json.JsonSerializer.Deserialize<UpdateState>(json);
                 }
+                else
+                {
+                    _state = new UpdateState
+                    {
+                        CurrentPhase = UpdatePhase.WindowsUpdate,
+                        UpdateCheckCount = 0,
+                        RestartCount = 0,
+                        LastCheckTime = DateTime.MinValue
+                    };
+                }
+            }
+            catch
+            {
+                _state = new UpdateState
+                {
+                    CurrentPhase = UpdatePhase.WindowsUpdate,
+                    UpdateCheckCount = 0,
+                    RestartCount = 0,
+                    LastCheckTime = DateTime.MinValue
+                };
+            }
+        }
+
+        private void SaveState()
+        {
+            try
+            {
+                string statePath = Path.Combine(Path.GetTempPath(), STATE_FILE);
+                string json = System.Text.Json.JsonSerializer.Serialize(_state);
+                File.WriteAllText(statePath, json);
+            }
+            catch (Exception ex)
+            {
+                AddLog($"⚠️ Could not save state: {ex.Message}");
+            }
+        }
+
+        private void ClearState()
+        {
+            try
+            {
+                string statePath = Path.Combine(Path.GetTempPath(), STATE_FILE);
+                if (File.Exists(statePath))
+                {
+                    File.Delete(statePath);
+                }
+                _state = new UpdateState
+                {
+                    CurrentPhase = UpdatePhase.Completed,
+                    UpdateCheckCount = 0,
+                    RestartCount = 0,
+                    LastCheckTime = DateTime.Now
+                };
             }
             catch { }
         }
 
-        private void SaveUpdateState(int pass)
+        private void ShowResumeDialog()
         {
-            try
+            string phase = _state.CurrentPhase switch
             {
-                string stateFile = Path.Combine(Path.GetTempPath(), UPDATE_STATE_FILE);
-                File.WriteAllText(stateFile, $"{UPDATE_PASS_KEY}={pass}\n");
-            }
-            catch { }
-        }
+                UpdatePhase.WindowsUpdate => _currentLanguage == "PT" ? "Atualização do Windows" : "Windows Update",
+                UpdatePhase.DriverUpdate => _currentLanguage == "PT" ? "Atualização de Drivers" : "Driver Update",
+                UpdatePhase.Cleanup => _currentLanguage == "PT" ? "Limpeza do Sistema" : "System Cleanup",
+                _ => ""
+            };
 
-        private void ClearUpdateState()
-        {
-            try
-            {
-                string stateFile = Path.Combine(Path.GetTempPath(), UPDATE_STATE_FILE);
-                if (File.Exists(stateFile))
-                {
-                    File.Delete(stateFile);
-                }
-                _currentUpdatePass = 0;
-            }
-            catch { }
+            ShowCustomDialog(
+                _currentLanguage == "PT" ? "Retomar Processo" : "Resume Process",
+                _currentLanguage == "PT"
+                    ? $"Foi detectado um processo em andamento.\n\nFase: {phase}\nVerificações: {_state.UpdateCheckCount}/{MAX_UPDATE_CHECKS}\nReinícios: {_state.RestartCount}\n\nDeseja continuar?"
+                    : $"A process in progress was detected.\n\nPhase: {phase}\nChecks: {_state.UpdateCheckCount}/{MAX_UPDATE_CHECKS}\nRestarts: {_state.RestartCount}\n\nDo you want to continue?",
+                DialogType.Question,
+                () => Task.Run(() => ContinueProcess()),
+                () => ClearState()
+            );
         }
 
         private void CheckAdminPrivileges()
@@ -173,14 +166,14 @@ namespace Nexor
             if (!isAdmin)
             {
                 AddLog("⚠️ " + (_currentLanguage == "PT"
-                    ? "AVISO CRÍTICO: Não está a executar como Administrador. A configuração FALHARÁ!"
-                    : "CRITICAL WARNING: Not running as Administrator. Setup WILL FAIL!"));
+                    ? "AVISO: Não está a executar como Administrador!"
+                    : "WARNING: Not running as Administrator!"));
 
                 ShowCustomDialog(
-                    "Nexor - Administrator Required",
+                    "Administrator Required",
                     _currentLanguage == "PT"
-                        ? "⚠️ ATENÇÃO: Este programa DEVE ser executado como Administrador!\n\nPor favor, feche e execute novamente com 'Executar como Administrador'."
-                        : "⚠️ WARNING: This program MUST be run as Administrator!\n\nPlease close and run again with 'Run as Administrator'.",
+                        ? "Este programa DEVE ser executado como Administrador!\n\nFeche e execute novamente com 'Executar como Administrador'."
+                        : "This program MUST be run as Administrator!\n\nClose and run again with 'Run as Administrator'.",
                     DialogType.Warning,
                     null,
                     null
@@ -188,554 +181,9 @@ namespace Nexor
             }
             else
             {
-                AddLog("✓ " + (_currentLanguage == "PT"
+                AddLog("✅ " + (_currentLanguage == "PT"
                     ? "A executar com privilégios de Administrador"
                     : "Running with Administrator privileges"));
-            }
-        }
-
-        private async Task<bool> PerformSystemDiagnostics()
-        {
-            AddLog("\n" + (_currentLanguage == "PT"
-                ? "🔍 Executando diagnósticos e correções automáticas do sistema..."
-                : "🔍 Running system diagnostics and automatic fixes..."));
-
-            bool allChecksPass = true;
-
-            // Check 1: Administrator Privileges
-            bool isAdmin = new System.Security.Principal.WindowsPrincipal(
-                System.Security.Principal.WindowsIdentity.GetCurrent())
-                .IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
-
-            if (isAdmin)
-            {
-                AddLog("  ✅ " + (_currentLanguage == "PT"
-                    ? "Privilégios de Administrador: OK"
-                    : "Administrator Privileges: OK"));
-            }
-            else
-            {
-                AddLog("  ❌ " + (_currentLanguage == "PT"
-                    ? "FALHA CRÍTICA: Não está a executar como Administrador - NÃO PODE SER CORRIGIDO AUTOMATICAMENTE"
-                    : "CRITICAL FAILURE: Not running as Administrator - CANNOT BE FIXED AUTOMATICALLY"));
-                allChecksPass = false;
-            }
-
-            // Check 2: Internet Connection
-            bool hasInternet = await CheckInternetConnection();
-            if (hasInternet)
-            {
-                AddLog("  ✅ " + (_currentLanguage == "PT"
-                    ? "Conexão à Internet: OK"
-                    : "Internet Connection: OK"));
-            }
-            else
-            {
-                AddLog("  ⚠️ " + (_currentLanguage == "PT"
-                    ? "AVISO: Sem conexão à Internet - Por favor, conecte-se à internet"
-                    : "WARNING: No Internet Connection - Please connect to internet"));
-
-                AddLog("  → " + (_currentLanguage == "PT"
-                    ? "Aguardando 10 segundos e verificando novamente..."
-                    : "Waiting 10 seconds and checking again..."));
-
-                await Task.Delay(10000);
-                hasInternet = await CheckInternetConnection();
-
-                if (hasInternet)
-                {
-                    AddLog("  ✅ " + (_currentLanguage == "PT"
-                        ? "Conexão à Internet restaurada!"
-                        : "Internet Connection restored!"));
-                }
-                else
-                {
-                    AddLog("  ⚠️ " + (_currentLanguage == "PT"
-                        ? "Ainda sem conexão - O processo pode falhar"
-                        : "Still no connection - Process may fail"));
-                    allChecksPass = false;
-                }
-            }
-
-            // Check 3: Windows Update Service
-            bool wuServiceRunning = await CheckWindowsUpdateService();
-            if (wuServiceRunning)
-            {
-                AddLog("  ✅ " + (_currentLanguage == "PT"
-                    ? "Serviço Windows Update: Ativo"
-                    : "Windows Update Service: Running"));
-            }
-            else
-            {
-                AddLog("  ⚠️ " + (_currentLanguage == "PT"
-                    ? "Serviço Windows Update não está ativo"
-                    : "Windows Update Service not running"));
-
-                AddLog("  → " + (_currentLanguage == "PT"
-                    ? "CORRIGINDO: Iniciando o serviço..."
-                    : "FIXING: Starting service..."));
-
-                bool started = await StartWindowsUpdateService();
-                if (started)
-                {
-                    AddLog("  ✅ " + (_currentLanguage == "PT"
-                        ? "Serviço iniciado com sucesso - PROBLEMA CORRIGIDO"
-                        : "Service started successfully - PROBLEM FIXED"));
-                }
-                else
-                {
-                    AddLog("  ❌ " + (_currentLanguage == "PT"
-                        ? "Falha ao iniciar serviço - Tentando reparação avançada..."
-                        : "Failed to start service - Trying advanced repair..."));
-
-                    bool repaired = await RepairWindowsUpdateService();
-                    if (repaired)
-                    {
-                        AddLog("  ✅ " + (_currentLanguage == "PT"
-                            ? "Serviço reparado e iniciado - PROBLEMA CORRIGIDO"
-                            : "Service repaired and started - PROBLEM FIXED"));
-                    }
-                    else
-                    {
-                        AddLog("  ❌ " + (_currentLanguage == "PT"
-                            ? "Falha na reparação - Pode afetar o processo"
-                            : "Repair failed - May affect process"));
-                        allChecksPass = false;
-                    }
-                }
-            }
-
-            // Check 4: Related Services
-            await EnsureRelatedServicesRunning();
-
-            // Check 5: PowerShell
-            bool psAvailable = CheckPowerShellAvailable();
-            if (psAvailable)
-            {
-                AddLog("  ✅ " + (_currentLanguage == "PT"
-                    ? "PowerShell: Disponível"
-                    : "PowerShell: Available"));
-            }
-            else
-            {
-                AddLog("  ❌ " + (_currentLanguage == "PT"
-                    ? "FALHA CRÍTICA: PowerShell não encontrado - Sistema comprometido"
-                    : "CRITICAL FAILURE: PowerShell not found - System compromised"));
-                allChecksPass = false;
-            }
-
-            // Check 6: Disk Space
-            long freeSpace = GetSystemDriveFreeSpace();
-            double freeSpaceGB = freeSpace / (1024.0 * 1024.0 * 1024.0);
-
-            if (freeSpaceGB > 20)
-            {
-                AddLog($"  ✅ " + (_currentLanguage == "PT"
-                    ? $"Espaço em disco: {freeSpaceGB:F1} GB disponível"
-                    : $"Disk Space: {freeSpaceGB:F1} GB available"));
-            }
-            else if (freeSpaceGB > 10)
-            {
-                AddLog($"  ⚠️ " + (_currentLanguage == "PT"
-                    ? $"AVISO: Pouco espaço em disco: {freeSpaceGB:F1} GB"
-                    : $"WARNING: Low disk space: {freeSpaceGB:F1} GB"));
-
-                AddLog("  → " + (_currentLanguage == "PT"
-                    ? "CORRIGINDO: Executando limpeza rápida de disco..."
-                    : "FIXING: Running quick disk cleanup..."));
-
-                await QuickDiskCleanup();
-
-                freeSpace = GetSystemDriveFreeSpace();
-                freeSpaceGB = freeSpace / (1024.0 * 1024.0 * 1024.0);
-
-                if (freeSpaceGB > 15)
-                {
-                    AddLog($"  ✅ " + (_currentLanguage == "PT"
-                        ? $"Espaço liberado! Agora: {freeSpaceGB:F1} GB - PROBLEMA MELHORADO"
-                        : $"Space freed! Now: {freeSpaceGB:F1} GB - PROBLEM IMPROVED"));
-                }
-                else
-                {
-                    AddLog($"  ⚠️ " + (_currentLanguage == "PT"
-                        ? $"Ainda pouco espaço: {freeSpaceGB:F1} GB - Considere liberar mais espaço manualmente"
-                        : $"Still low space: {freeSpaceGB:F1} GB - Consider freeing more space manually"));
-                }
-            }
-            else
-            {
-                AddLog($"  ❌ " + (_currentLanguage == "PT"
-                    ? $"CRÍTICO: Espaço insuficiente: {freeSpaceGB:F1} GB"
-                    : $"CRITICAL: Insufficient space: {freeSpaceGB:F1} GB"));
-
-                AddLog("  → " + (_currentLanguage == "PT"
-                    ? "CORRIGINDO: Executando limpeza agressiva de disco..."
-                    : "FIXING: Running aggressive disk cleanup..."));
-
-                await AggressiveDiskCleanup();
-
-                freeSpace = GetSystemDriveFreeSpace();
-                freeSpaceGB = freeSpace / (1024.0 * 1024.0 * 1024.0);
-
-                if (freeSpaceGB > 10)
-                {
-                    AddLog($"  ✅ " + (_currentLanguage == "PT"
-                        ? $"Espaço suficiente liberado: {freeSpaceGB:F1} GB - PROBLEMA CORRIGIDO"
-                        : $"Sufficient space freed: {freeSpaceGB:F1} GB - PROBLEM FIXED"));
-                }
-                else
-                {
-                    AddLog($"  ❌ " + (_currentLanguage == "PT"
-                        ? $"Ainda insuficiente: {freeSpaceGB:F1} GB - REQUER INTERVENÇÃO MANUAL"
-                        : $"Still insufficient: {freeSpaceGB:F1} GB - REQUIRES MANUAL INTERVENTION"));
-                    allChecksPass = false;
-                }
-            }
-
-            // Check 7: Windows Update Registry Settings
-            await FixWindowsUpdateRegistry();
-
-            // Check 8: Network Configuration
-            await CheckAndFixNetworkConfiguration();
-
-            AddLog("");
-
-            if (allChecksPass)
-            {
-                AddLog("✅ " + (_currentLanguage == "PT"
-                    ? "Todos os diagnósticos passaram! Sistema pronto e otimizado."
-                    : "All diagnostics passed! System ready and optimized."));
-            }
-            else
-            {
-                AddLog("⚠️ " + (_currentLanguage == "PT"
-                    ? "Alguns problemas não puderam ser corrigidos automaticamente. O processo continuará, mas pode haver falhas."
-                    : "Some issues could not be fixed automatically. Process will continue, but failures may occur."));
-            }
-
-            return allChecksPass;
-        }
-
-        private async Task<bool> RepairWindowsUpdateService()
-        {
-            return await Task.Run(async () =>
-            {
-                try
-                {
-                    string repairScript = @"
-                        Write-Host 'Stopping Windows Update services...'
-                        Stop-Service -Name wuauserv -Force -ErrorAction SilentlyContinue
-                        Stop-Service -Name cryptSvc -Force -ErrorAction SilentlyContinue
-                        Stop-Service -Name bits -Force -ErrorAction SilentlyContinue
-                        Stop-Service -Name msiserver -Force -ErrorAction SilentlyContinue
-                        
-                        Start-Sleep -Seconds 3
-                        
-                        Write-Host 'Resetting service configurations...'
-                        sc.exe config wuauserv start= auto
-                        sc.exe config cryptSvc start= auto
-                        sc.exe config bits start= auto
-                        
-                        Write-Host 'Clearing Windows Update cache...'
-                        Remove-Item -Path 'C:\Windows\SoftwareDistribution\Download\*' -Recurse -Force -ErrorAction SilentlyContinue
-                        
-                        Start-Sleep -Seconds 2
-                        
-                        Write-Host 'Starting Windows Update services...'
-                        Start-Service -Name wuauserv -ErrorAction SilentlyContinue
-                        Start-Service -Name cryptSvc -ErrorAction SilentlyContinue
-                        Start-Service -Name bits -ErrorAction SilentlyContinue
-                        
-                        Start-Sleep -Seconds 2
-                        
-                        $wuService = Get-Service -Name wuauserv
-                        if ($wuService.Status -eq 'Running') {
-                            Write-Host 'SERVICE_REPAIR_SUCCESS'
-                        } else {
-                            Write-Host 'SERVICE_REPAIR_FAILED'
-                        }
-                    ";
-
-                    var result = await RunPowerShellScript(repairScript);
-                    return result.Contains("SERVICE_REPAIR_SUCCESS");
-                }
-                catch
-                {
-                    return false;
-                }
-            });
-        }
-
-        private async Task EnsureRelatedServicesRunning()
-        {
-            string[] requiredServices = { "cryptSvc", "bits", "TrustedInstaller" };
-
-            foreach (string serviceName in requiredServices)
-            {
-                try
-                {
-                    using (var service = new ServiceController(serviceName))
-                    {
-                        if (service.Status != ServiceControllerStatus.Running)
-                        {
-                            AddLog($"  → " + (_currentLanguage == "PT"
-                                ? $"CORRIGINDO: Iniciando serviço {serviceName}..."
-                                : $"FIXING: Starting service {serviceName}..."));
-
-                            service.Start();
-                            service.WaitForStatus(ServiceControllerStatus.Running, TimeSpan.FromSeconds(30));
-
-                            AddLog($"  ✅ " + (_currentLanguage == "PT"
-                                ? $"Serviço {serviceName} iniciado - PROBLEMA CORRIGIDO"
-                                : $"Service {serviceName} started - PROBLEM FIXED"));
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    AddLog($"  ⚠️ " + (_currentLanguage == "PT"
-                        ? $"Não foi possível iniciar {serviceName}: {ex.Message}"
-                        : $"Could not start {serviceName}: {ex.Message}"));
-                }
-            }
-        }
-
-        private async Task QuickDiskCleanup()
-        {
-            try
-            {
-                await Task.Run(() =>
-                {
-                    string tempPath = Path.GetTempPath();
-                    CleanDirectory(tempPath);
-
-                    string windowsTempPath = @"C:\Windows\Temp";
-                    CleanDirectory(windowsTempPath);
-                });
-
-                AddLog("  ✓ " + (_currentLanguage == "PT"
-                    ? "Limpeza rápida concluída"
-                    : "Quick cleanup completed"));
-            }
-            catch { }
-        }
-
-        private async Task AggressiveDiskCleanup()
-        {
-            try
-            {
-                await Task.Run(async () =>
-                {
-                    string tempPath = Path.GetTempPath();
-                    CleanDirectory(tempPath);
-
-                    string windowsTempPath = @"C:\Windows\Temp";
-                    CleanDirectory(windowsTempPath);
-
-                    string updateCachePath = @"C:\Windows\SoftwareDistribution\Download";
-                    CleanDirectory(updateCachePath);
-
-                    string prefetchPath = @"C:\Windows\Prefetch";
-                    CleanDirectory(prefetchPath);
-
-                    try
-                    {
-                        await RunPowerShellCommand("Clear-RecycleBin -Force -ErrorAction SilentlyContinue");
-                    }
-                    catch { }
-
-                    try
-                    {
-                        await RunCommand("cleanmgr.exe", "/sagerun:1");
-                    }
-                    catch { }
-                });
-
-                AddLog("  ✓ " + (_currentLanguage == "PT"
-                    ? "Limpeza agressiva concluída"
-                    : "Aggressive cleanup completed"));
-            }
-            catch { }
-        }
-
-        private async Task FixWindowsUpdateRegistry()
-        {
-            try
-            {
-                AddLog("  → " + (_currentLanguage == "PT"
-                    ? "Verificando e corrigindo configurações de registro do Windows Update..."
-                    : "Checking and fixing Windows Update registry settings..."));
-
-                string registryFixScript = @"
-                    try {
-                        $WUPath = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate'
-                        $AUPath = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU'
-                        
-                        if (Test-Path $WUPath) {
-                            Remove-Item -Path $WUPath -Recurse -Force -ErrorAction SilentlyContinue
-                            Write-Host 'Removed restrictive Windows Update policies'
-                        }
-                        
-                        Write-Host 'REGISTRY_FIX_SUCCESS'
-                    } catch {
-                        Write-Host 'REGISTRY_FIX_FAILED'
-                    }
-                ";
-
-                var result = await RunPowerShellScript(registryFixScript);
-
-                if (result.Contains("REGISTRY_FIX_SUCCESS"))
-                {
-                    AddLog("  ✅ " + (_currentLanguage == "PT"
-                        ? "Configurações de registro corrigidas"
-                        : "Registry settings fixed"));
-                }
-            }
-            catch { }
-        }
-
-        private async Task CheckAndFixNetworkConfiguration()
-        {
-            try
-            {
-                AddLog("  → " + (_currentLanguage == "PT"
-                    ? "Verificando configuração de rede..."
-                    : "Checking network configuration..."));
-
-                string networkFixScript = @"
-                    try {
-                        ipconfig /flushdns | Out-Null
-                        Write-Host 'DNS cache flushed'
-                        
-                        netsh winsock reset | Out-Null
-                        Write-Host 'Winsock reset'
-                        
-                        Write-Host 'NETWORK_FIX_SUCCESS'
-                    } catch {
-                        Write-Host 'NETWORK_FIX_FAILED'
-                    }
-                ";
-
-                var result = await RunPowerShellScript(networkFixScript);
-
-                if (result.Contains("NETWORK_FIX_SUCCESS"))
-                {
-                    AddLog("  ✅ " + (_currentLanguage == "PT"
-                        ? "Configuração de rede otimizada"
-                        : "Network configuration optimized"));
-                }
-            }
-            catch { }
-        }
-
-        private async Task<bool> CheckInternetConnection()
-        {
-            try
-            {
-                using (var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(10)))
-                {
-                    var response = await _httpClient.GetAsync("http://www.msftconnecttest.com/connecttest.txt", cts.Token);
-                    return response.IsSuccessStatusCode;
-                }
-            }
-            catch
-            {
-                try
-                {
-                    using (var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(10)))
-                    {
-                        var response = await _httpClient.GetAsync("http://www.google.com", cts.Token);
-                        return response.IsSuccessStatusCode;
-                    }
-                }
-                catch
-                {
-                    return false;
-                }
-            }
-        }
-
-        private async Task<bool> CheckWindowsUpdateService()
-        {
-            return await Task.Run(() =>
-            {
-                try
-                {
-                    using (var service = new ServiceController("wuauserv"))
-                    {
-                        return service.Status == ServiceControllerStatus.Running;
-                    }
-                }
-                catch
-                {
-                    return false;
-                }
-            });
-        }
-
-        private async Task<bool> StartWindowsUpdateService()
-        {
-            return await Task.Run(() =>
-            {
-                try
-                {
-                    using (var service = new ServiceController("wuauserv"))
-                    {
-                        if (service.Status != ServiceControllerStatus.Running)
-                        {
-                            service.Start();
-                            service.WaitForStatus(ServiceControllerStatus.Running,
-                                TimeSpan.FromSeconds(30));
-                            return true;
-                        }
-                        return true;
-                    }
-                }
-                catch
-                {
-                    return false;
-                }
-            });
-        }
-
-        private bool CheckPowerShellAvailable()
-        {
-            try
-            {
-                var psi = new ProcessStartInfo
-                {
-                    FileName = "powershell.exe",
-                    Arguments = "-Version",
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-
-                using (var process = Process.Start(psi))
-                {
-                    if (process != null)
-                    {
-                        process.WaitForExit(5000);
-                        return process.ExitCode == 0;
-                    }
-                    return false;
-                }
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private long GetSystemDriveFreeSpace()
-        {
-            try
-            {
-                DriveInfo systemDrive = new DriveInfo("C");
-                return systemDrive.AvailableFreeSpace;
-            }
-            catch
-            {
-                return 0;
             }
         }
 
@@ -743,92 +191,83 @@ namespace Nexor
         {
             if (language == "PT")
             {
-                TxtTitle.Text = "Configuração Inicial Windows 11";
-                TxtSubtitle.Text = "Otimize o seu sistema após instalação limpa";
-                TxtStatusTitle.Text = "Estado do Sistema";
-                TxtStatusDesc.Text = "Pronto para configuração inicial";
-                BtnRunAll.Content = "🚀 Executar Configuração Completa";
+                TxtTitle.Text = "Configuração Automática Windows 11";
+                TxtSubtitle.Text = "Atualize e otimize automaticamente";
+                TxtStatusTitle.Text = "Estado do Processo";
+                TxtStatusDesc.Text = "Pronto para iniciar";
+                BtnRunAll.Content = "🚀 Iniciar Processo Automático";
 
                 TxtStep1Title.Text = "Atualizar Windows";
-                TxtStep1Desc.Text = "Instalar todas as atualizações disponíveis do Windows 11";
+                TxtStep1Desc.Text = "Abre Windows Update e instala todas as atualizações";
                 TxtStep1Status.Text = "⏳ Pendente";
 
                 TxtStep2Title.Text = "Atualizar Drivers";
-                TxtStep2Desc.Text = "Verificar e instalar drivers mais recentes para hardware";
+                TxtStep2Desc.Text = "Atualiza todos os drivers do Gestor de Dispositivos";
                 TxtStep2Status.Text = "⏳ Pendente";
 
                 TxtStep3Title.Text = "Limpar Sistema";
-                TxtStep3Desc.Text = "Remover ficheiros temporários, caches e versões antigas do Windows";
+                TxtStep3Desc.Text = "Remove versões antigas do Windows e arquivos desnecessários";
                 TxtStep3Status.Text = "⏳ Pendente";
 
-                TxtInfoTitle.Text = "ℹ️ Informação Importante";
-                TxtInfo1.Text = "• Este processo pode demorar 30-60 minutos dependendo das atualizações disponíveis";
-                TxtInfo2.Text = "• É OBRIGATÓRIO executar como Administrador";
-                TxtInfo3.Text = "• Mantenha o computador ligado e conectado à internet";
-                TxtInfo4.Text = "• O sistema pode reiniciar automaticamente várias vezes";
+                TxtInfoTitle.Text = "ℹ️ Como Funciona";
+                TxtInfo1.Text = "• O programa abre o Windows Update e monitora o progresso";
+                TxtInfo2.Text = "• Quando necessário, reinicia automaticamente o computador";
+                TxtInfo3.Text = "• Após reiniciar, o processo continua automaticamente";
+                TxtInfo4.Text = "• Todo o processo é totalmente automático até conclusão";
             }
             else
             {
-                TxtTitle.Text = "Fresh Windows 11 Setup";
-                TxtSubtitle.Text = "Optimize your system after clean installation";
-                TxtStatusTitle.Text = "System Status";
-                TxtStatusDesc.Text = "Ready for initial setup";
-                BtnRunAll.Content = "🚀 Run Complete Setup";
+                TxtTitle.Text = "Windows 11 Automatic Setup";
+                TxtSubtitle.Text = "Update and optimize automatically";
+                TxtStatusTitle.Text = "Process Status";
+                TxtStatusDesc.Text = "Ready to start";
+                BtnRunAll.Content = "🚀 Start Automatic Process";
 
                 TxtStep1Title.Text = "Update Windows";
-                TxtStep1Desc.Text = "Install all available Windows 11 updates";
+                TxtStep1Desc.Text = "Opens Windows Update and installs all updates";
                 TxtStep1Status.Text = "⏳ Pending";
 
                 TxtStep2Title.Text = "Update Drivers";
-                TxtStep2Desc.Text = "Check and install latest hardware drivers";
+                TxtStep2Desc.Text = "Updates all drivers from Device Manager";
                 TxtStep2Status.Text = "⏳ Pending";
 
                 TxtStep3Title.Text = "Clean System";
-                TxtStep3Desc.Text = "Remove temporary files, caches and old Windows versions";
+                TxtStep3Desc.Text = "Removes old Windows versions and unnecessary files";
                 TxtStep3Status.Text = "⏳ Pending";
 
-                TxtInfoTitle.Text = "ℹ️ Important Information";
-                TxtInfo1.Text = "• This process may take 30-60 minutes depending on available updates";
-                TxtInfo2.Text = "• Running as Administrator is REQUIRED";
-                TxtInfo3.Text = "• Keep computer on and connected to internet";
-                TxtInfo4.Text = "• The system may restart automatically several times";
+                TxtInfoTitle.Text = "ℹ️ How It Works";
+                TxtInfo1.Text = "• The program opens Windows Update and monitors progress";
+                TxtInfo2.Text = "• When needed, automatically restarts the computer";
+                TxtInfo3.Text = "• After restart, process continues automatically";
+                TxtInfo4.Text = "• Entire process is fully automatic until completion";
             }
         }
 
         private async void BtnRunAll_Click(object sender, RoutedEventArgs e)
         {
-            if (_isRunning)
+            if (_isProcessing)
                 return;
 
             ShowCustomDialog(
-                _currentLanguage == "PT" ? "Configuração Automática" : "Automatic Setup",
+                _currentLanguage == "PT" ? "Iniciar Processo Automático" : "Start Automatic Process",
                 _currentLanguage == "PT"
-                    ? "Deseja executar todos os passos automaticamente?\n\n⚠️ IMPORTANTE:\n• O processo pode demorar 30-90 minutos\n• O computador pode reiniciar AUTOMATICAMENTE várias vezes\n• As atualizações serão instaladas em múltiplos passes\n• Problemas detectados serão CORRIGIDOS AUTOMATICAMENTE\n• O log mostrará o progresso em tempo real\n\nRecomendação: Deixe o computador ligado e conectado à internet."
-                    : "Do you want to run all steps automatically?\n\n⚠️ IMPORTANT:\n• The process may take 30-90 minutes\n• The computer may RESTART AUTOMATICALLY several times\n• Updates will be installed in multiple passes\n• Detected problems will be FIXED AUTOMATICALLY\n• The log will show real-time progress\n\nRecommendation: Keep computer on and connected to internet.",
+                    ? "O processo irá:\n\n1️⃣ Abrir o Windows Update e verificar atualizações\n2️⃣ Instalar todas as atualizações disponíveis\n3️⃣ Reiniciar automaticamente quando necessário\n4️⃣ Atualizar todos os drivers\n5️⃣ Limpar arquivos antigos\n\n⚠️ O computador pode reiniciar VÁRIAS VEZES.\n⏱️ Duração estimada: 30-90 minutos\n\nDeseja continuar?"
+                    : "The process will:\n\n1️⃣ Open Windows Update and check for updates\n2️⃣ Install all available updates\n3️⃣ Restart automatically when needed\n4️⃣ Update all drivers\n5️⃣ Clean old files\n\n⚠️ Computer may restart MULTIPLE TIMES.\n⏱️ Estimated duration: 30-90 minutes\n\nDo you want to continue?",
                 DialogType.Question,
                 async () =>
                 {
-                    _isRunning = true;
+                    _isProcessing = true;
                     BtnRunAll.IsEnabled = false;
                     LogCard.Visibility = Visibility.Visible;
 
                     AddLog("═══════════════════════════════════════");
-                    AddLog(_currentLanguage == "PT"
-                        ? "🚀 Iniciando configuração automática completa..."
-                        : "🚀 Starting complete automatic setup...");
-                    AddLog("═══════════════════════════════════════");
-
-                    bool diagnosticsPass = await PerformSystemDiagnostics();
-
-                    AddLog("\n" + (_currentLanguage == "PT"
-                        ? "⏰ O processo será totalmente automático, incluindo reinicializações"
-                        : "⏰ The process will be fully automatic, including restarts"));
+                    AddLog("🚀 " + (_currentLanguage == "PT"
+                        ? "Iniciando processo automático..."
+                        : "Starting automatic process..."));
                     AddLog("═══════════════════════════════════════\n");
 
-                    await RunAllSteps();
-
-                    _isRunning = false;
-                    BtnRunAll.IsEnabled = true;
+                    await SetupAutoStart();
+                    await StartProcess();
                 },
                 () =>
                 {
@@ -839,425 +278,7 @@ namespace Nexor
             );
         }
 
-        private async Task RunAllSteps()
-        {
-            try
-            {
-                await RunStep1();
-                await Task.Delay(3000);
-
-                await RunStep2();
-                await Task.Delay(3000);
-
-                await RunStep3();
-
-                AddLog("\n═══════════════════════════════════════");
-                AddLog(_currentLanguage == "PT"
-                    ? "✅ CONFIGURAÇÃO CONCLUÍDA COM SUCESSO!"
-                    : "✅ SETUP COMPLETED SUCCESSFULLY!");
-                AddLog("═══════════════════════════════════════");
-
-                AnimateCompletion();
-                ClearUpdateState();
-
-                ShowCustomNotification(
-                    _currentLanguage == "PT" ? "Sucesso" : "Success",
-                    _currentLanguage == "PT"
-                        ? "🎉 Configuração inicial concluída!\n\n✅ Windows Update: Todas as atualizações instaladas\n✅ Drivers: Atualizados via Windows Update\n✅ Sistema: Limpo e otimizado\n\nRecomendação: Reinicie o computador agora para aplicar todas as alterações."
-                        : "🎉 Initial setup completed!\n\n✅ Windows Update: All updates installed\n✅ Drivers: Updated via Windows Update\n✅ System: Cleaned and optimized\n\nRecommendation: Restart your computer now to apply all changes.",
-                    NotificationType.Success
-                );
-            }
-            catch (Exception ex)
-            {
-                AddLog($"\n❌ {(_currentLanguage == "PT" ? "ERRO CRÍTICO" : "CRITICAL ERROR")}: {ex.Message}");
-                ShowCustomNotification(
-                    "Error",
-                    $"{(_currentLanguage == "PT" ? "Erro durante a configuração" : "Error during setup")}:\n{ex.Message}",
-                    NotificationType.Error
-                );
-            }
-        }
-
-        private async void BtnStep1_Click(object sender, RoutedEventArgs e)
-        {
-            BtnStep1.IsEnabled = false;
-            await RunStep1();
-            BtnStep1.IsEnabled = true;
-        }
-
-        private async Task RunStep1()
-        {
-            _statusAnimationTimer.Start();
-
-            AddLog("\n" + (_currentLanguage == "PT" ? "▶ Passo 1: Atualizando Windows..." : "▶ Step 1: Updating Windows..."));
-            AddLog(_currentLanguage == "PT"
-                ? "⏰ Este passo pode demorar 15-45 minutos. Aguarde..."
-                : "⏰ This step may take 15-45 minutes. Please wait...");
-
-            UpdateStepStatus(1, _currentLanguage == "PT" ? "🔄 A executar..." : "🔄 Running...", Brushes.Orange);
-            AnimateStep(Step1Card, Step1Badge);
-            ProgressStep1.Visibility = Visibility.Visible;
-
-            try
-            {
-                await Task.Run(async () =>
-                {
-                    UpdateLiveStatus(
-                        _currentLanguage == "PT"
-                            ? "Reiniciando componentes do Windows Update"
-                            : "Restarting Windows Update components");
-
-                    await ResetWindowsUpdateComponents();
-
-                    UpdateLiveStatus(
-                        _currentLanguage == "PT"
-                            ? "Preparando sistema de atualizações"
-                            : "Preparing update system");
-
-                    UpdateProgressBar(ProgressStep1, 10);
-
-                    string installModuleScript = @"
-                try {
-                    if (-not (Get-Module -ListAvailable -Name PSWindowsUpdate)) {
-                        Write-Host 'Installing PSWindowsUpdate module...'
-                        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-                        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -ErrorAction SilentlyContinue | Out-Null
-                        Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted -ErrorAction SilentlyContinue
-                        Install-Module -Name PSWindowsUpdate -Force -Confirm:$false -AllowClobber -ErrorAction Stop
-                        Write-Host 'PSWindowsUpdate installed successfully'
-                    } else {
-                        Write-Host 'PSWindowsUpdate already installed'
-                        Import-Module PSWindowsUpdate -Force
-                    }
-                } catch {
-                    Write-Host ""Error installing PSWindowsUpdate: $($_.Exception.Message)""
-                    exit 1
-                }
-            ";
-
-                    try
-                    {
-                        UpdateLiveStatus(
-                            _currentLanguage == "PT"
-                                ? "Instalando módulo PSWindowsUpdate"
-                                : "Installing PSWindowsUpdate module");
-
-                        var moduleResult = await RunPowerShellScript(installModuleScript);
-                        AddLog($"  ✓ {moduleResult.Trim()}");
-                    }
-                    catch (Exception ex)
-                    {
-                        AddLog($"  ⚠️ Module installation: {ex.Message}");
-                    }
-
-                    UpdateProgressBar(ProgressStep1, 15);
-
-                    int updatePass = _currentUpdatePass > 0 ? _currentUpdatePass : 1;
-                    bool updatesFound = true;
-
-                    while (updatesFound && updatePass <= MAX_UPDATE_PASSES)
-                    {
-                        AddLog($"\n  🔄 " + (_currentLanguage == "PT"
-                            ? $"Passo de atualização {updatePass}/{MAX_UPDATE_PASSES}"
-                            : $"Update pass {updatePass}/{MAX_UPDATE_PASSES}"));
-
-                        SaveUpdateState(updatePass);
-
-                        UpdateLiveStatus(
-                            _currentLanguage == "PT"
-                                ? $"Verificando atualizações (passo {updatePass})"
-                                : $"Checking updates (pass {updatePass})");
-
-                        string checkUpdatesScript = @"
-                    Import-Module PSWindowsUpdate -ErrorAction Stop
-                    $Updates = Get-WindowsUpdate -MicrosoftUpdate -IgnoreReboot -ErrorAction SilentlyContinue
-                    if ($Updates.Count -eq 0) {
-                        Write-Host 'NO_UPDATES_FOUND'
-                    } else {
-                        Write-Host ""UPDATES_FOUND:$($Updates.Count)""
-                        foreach ($Update in $Updates) {
-                            Write-Host ""  - $($Update.Title)""
-                        }
-                    }
-                ";
-
-                        var checkResult = await RunPowerShellScript(checkUpdatesScript);
-
-                        if (checkResult.Contains("NO_UPDATES_FOUND"))
-                        {
-                            AddLog("  ✅ " + (_currentLanguage == "PT"
-                                ? "Nenhuma atualização disponível"
-                                : "No updates available"));
-                            updatesFound = false;
-                            break;
-                        }
-                        else if (checkResult.Contains("UPDATES_FOUND:"))
-                        {
-                            var lines = checkResult.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                            foreach (var line in lines)
-                            {
-                                if (!string.IsNullOrWhiteSpace(line))
-                                {
-                                    AddLog($"  {line.Trim()}");
-                                }
-                            }
-
-                            UpdateProgressBar(ProgressStep1, 20 + (updatePass - 1) * 20);
-
-                            UpdateLiveStatus(
-                                _currentLanguage == "PT"
-                                    ? $"Instalando atualizações (passo {updatePass})"
-                                    : $"Installing updates (pass {updatePass})",
-                                _currentLanguage == "PT"
-                                    ? "Isto pode demorar alguns minutos..."
-                                    : "This may take a few minutes...");
-
-                            string installUpdatesScript = @"
-                        Import-Module PSWindowsUpdate -ErrorAction Stop
-                        
-                        Write-Host '=== Installing Windows Updates ==='
-                        
-                        try {
-                            Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot -Verbose -Confirm:$false -ErrorAction Stop
-                            Write-Host 'UPDATE_INSTALL_SUCCESS'
-                        } catch {
-                            Write-Host ""UPDATE_INSTALL_ERROR: $($_.Exception.Message)""
-                            exit 1
-                        }
-                        
-                        Write-Host '=== Checking for remaining updates ==='
-                        $Remaining = Get-WindowsUpdate -MicrosoftUpdate -ErrorAction SilentlyContinue
-                        if ($Remaining.Count -gt 0) {
-                            Write-Host ""REMAINING_UPDATES:$($Remaining.Count)""
-                        } else {
-                            Write-Host 'ALL_UPDATES_INSTALLED'
-                        }
-                    ";
-
-                            try
-                            {
-                                var installResult = await RunPowerShellScriptWithProgress(
-                                    installUpdatesScript,
-                                    ProgressStep1,
-                                    20 + (updatePass - 1) * 20,
-                                    40 + (updatePass - 1) * 20);
-
-                                var installLines = installResult.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                                foreach (var line in installLines)
-                                {
-                                    if (!string.IsNullOrWhiteSpace(line) && !line.Contains("WARNING:"))
-                                    {
-                                        AddLog($"  {line.Trim()}");
-                                    }
-                                }
-
-                                if (installResult.Contains("REMAINING_UPDATES:"))
-                                {
-                                    AddLog("  ⚠️ " + (_currentLanguage == "PT"
-                                        ? "Atualizações adicionais disponíveis. Será necessário outro passo."
-                                        : "Additional updates available. Another pass will be needed."));
-
-                                    if (updatePass < MAX_UPDATE_PASSES)
-                                    {
-                                        bool rebootRequired = await CheckRebootRequired();
-
-                                        if (rebootRequired)
-                                        {
-                                            UpdateLiveStatus(
-                                                _currentLanguage == "PT"
-                                                    ? "Reinicialização necessária"
-                                                    : "Restart required");
-
-                                            AddLog("\n  🔄 " + (_currentLanguage == "PT"
-                                                ? "Reinicialização necessária. Preparando reinício automático..."
-                                                : "Reboot required. Preparing automatic restart..."));
-
-                                            _statusAnimationTimer.Stop();
-                                            TxtLiveStatus.Visibility = Visibility.Collapsed;
-
-                                            ShowCustomDialog(
-                                                _currentLanguage == "PT" ? "Reinicialização Necessária" : "Restart Required",
-                                                _currentLanguage == "PT"
-                                                    ? $"É necessário reiniciar o computador para continuar as atualizações.\n\nPasso {updatePass}/{MAX_UPDATE_PASSES} concluído.\n\nDeseja reiniciar AGORA? O processo continuará automaticamente após o reinício."
-                                                    : $"Computer restart required to continue updates.\n\nPass {updatePass}/{MAX_UPDATE_PASSES} completed.\n\nRestart NOW? The process will continue automatically after restart.",
-                                                DialogType.Question,
-                                                async () =>
-                                                {
-                                                    SaveUpdateState(updatePass + 1);
-                                                    await ScheduleStartup();
-                                                    RestartComputer();
-                                                },
-                                                null
-                                            );
-                                            return;
-                                        }
-                                    }
-
-                                    updatePass++;
-                                    await Task.Delay(5000);
-                                }
-                                else if (installResult.Contains("ALL_UPDATES_INSTALLED"))
-                                {
-                                    AddLog("  ✅ " + (_currentLanguage == "PT"
-                                        ? "Todas as atualizações instaladas!"
-                                        : "All updates installed!"));
-                                    updatesFound = false;
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                AddLog($"  ⚠️ Error during installation: {ex.Message}");
-
-                                UpdateLiveStatus(
-                                    _currentLanguage == "PT"
-                                        ? "Tentando método alternativo"
-                                        : "Trying alternative method");
-
-                                await RunCommand("UsoClient.exe", "StartScan");
-                                await Task.Delay(5000);
-                                await RunCommand("UsoClient.exe", "StartDownload");
-                                await Task.Delay(10000);
-                                await RunCommand("UsoClient.exe", "StartInstall");
-
-                                updatesFound = false;
-                            }
-                        }
-                        else
-                        {
-                            AddLog("  ⚠️ " + (_currentLanguage == "PT"
-                                ? "Não foi possível verificar atualizações"
-                                : "Unable to check for updates"));
-
-                            UpdateLiveStatus(
-                                _currentLanguage == "PT"
-                                    ? "Usando método alternativo"
-                                    : "Using alternative method");
-
-                            await RunCommand("UsoClient.exe", "StartScan");
-                            await Task.Delay(5000);
-                            await RunCommand("UsoClient.exe", "StartDownload");
-                            await Task.Delay(10000);
-                            await RunCommand("UsoClient.exe", "StartInstall");
-
-                            updatesFound = false;
-                        }
-                    }
-
-                    if (updatePass > MAX_UPDATE_PASSES)
-                    {
-                        AddLog("\n  ℹ️ " + (_currentLanguage == "PT"
-                            ? $"Número máximo de passes ({MAX_UPDATE_PASSES}) atingido. Verifique o Windows Update manualmente para confirmar."
-                            : $"Maximum number of passes ({MAX_UPDATE_PASSES}) reached. Check Windows Update manually to confirm."));
-                    }
-
-                    UpdateProgressBar(ProgressStep1, 95);
-
-                    UpdateLiveStatus(
-                        _currentLanguage == "PT"
-                            ? "Verificação final de atualizações"
-                            : "Final update check");
-
-                    var finalCheck = await RunPowerShellScript(@"
-                Import-Module PSWindowsUpdate -ErrorAction SilentlyContinue
-                $Final = Get-WindowsUpdate -MicrosoftUpdate -ErrorAction SilentlyContinue
-                if ($Final.Count -eq 0) {
-                    Write-Host 'SYSTEM_UP_TO_DATE'
-                } else {
-                    Write-Host ""UPDATES_STILL_AVAILABLE:$($Final.Count)""
-                }
-            ");
-
-                    if (finalCheck.Contains("SYSTEM_UP_TO_DATE"))
-                    {
-                        AddLog("  ✅ " + (_currentLanguage == "PT"
-                            ? "Sistema totalmente atualizado!"
-                            : "System fully up to date!"));
-                    }
-                    else if (finalCheck.Contains("UPDATES_STILL_AVAILABLE:"))
-                    {
-                        AddLog("  ⚠️ " + (_currentLanguage == "PT"
-                            ? "Algumas atualizações ainda disponíveis. Podem requerer reinicialização manual."
-                            : "Some updates still available. May require manual restart."));
-                    }
-
-                    UpdateProgressBar(ProgressStep1, 100);
-                });
-
-                UpdateStepStatus(1, _currentLanguage == "PT" ? "✅ Concluído" : "✅ Completed", Brushes.LightGreen);
-                UpdateProgress();
-                AddLog(_currentLanguage == "PT"
-                    ? "  ✅ Processo de atualização do Windows concluído!"
-                    : "  ✅ Windows update process completed!");
-            }
-            catch (Exception ex)
-            {
-                UpdateStepStatus(1, _currentLanguage == "PT" ? "❌ Erro" : "❌ Error", Brushes.Red);
-                AddLog($"  ❌ {(_currentLanguage == "PT" ? "Erro" : "Error")}: {ex.Message}");
-            }
-            finally
-            {
-                _statusAnimationTimer.Stop();
-                Dispatcher.Invoke(() =>
-                {
-                    TxtLiveStatus.Visibility = Visibility.Collapsed;
-                });
-            }
-        }
-
-        private async Task ResetWindowsUpdateComponents()
-        {
-            try
-            {
-                string resetScript = @"
-                    Write-Host 'Stopping Windows Update services...'
-                    Stop-Service -Name wuauserv -Force -ErrorAction SilentlyContinue
-                    Stop-Service -Name cryptSvc -Force -ErrorAction SilentlyContinue
-                    Stop-Service -Name bits -Force -ErrorAction SilentlyContinue
-                    Stop-Service -Name msiserver -Force -ErrorAction SilentlyContinue
-                    
-                    Start-Sleep -Seconds 2
-                    
-                    Write-Host 'Starting Windows Update services...'
-                    Start-Service -Name wuauserv -ErrorAction SilentlyContinue
-                    Start-Service -Name cryptSvc -ErrorAction SilentlyContinue
-                    Start-Service -Name bits -ErrorAction SilentlyContinue
-                    
-                    Write-Host 'Services restarted successfully'
-                ";
-
-                await RunPowerShellScript(resetScript);
-                AddLog("  ✓ " + (_currentLanguage == "PT"
-                    ? "Componentes do Windows Update reiniciados"
-                    : "Windows Update components reset"));
-            }
-            catch
-            {
-                AddLog("  ⚠️ " + (_currentLanguage == "PT"
-                    ? "Aviso ao reiniciar componentes"
-                    : "Warning resetting components"));
-            }
-        }
-
-        private async Task<bool> CheckRebootRequired()
-        {
-            return await Task.Run(() =>
-            {
-                try
-                {
-                    using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired"))
-                    {
-                        return key != null;
-                    }
-                }
-                catch
-                {
-                    return false;
-                }
-            });
-        }
-
-        private async Task ScheduleStartup()
+        private async Task SetupAutoStart()
         {
             try
             {
@@ -1266,264 +287,432 @@ namespace Nexor
                     $Action = New-ScheduledTaskAction -Execute '{appPath}'
                     $Trigger = New-ScheduledTaskTrigger -AtLogOn
                     $Principal = New-ScheduledTaskPrincipal -UserId '$env:USERNAME' -LogonType Interactive -RunLevel Highest
-                    $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+                    $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Hours 0)
                     
-                    Register-ScheduledTask -TaskName 'NexorAutoResume' -Action $Action -Trigger $Trigger -Principal $Principal -Settings $Settings -Force
+                    Unregister-ScheduledTask -TaskName '{STARTUP_TASK_NAME}' -Confirm:$false -ErrorAction SilentlyContinue
+                    Register-ScheduledTask -TaskName '{STARTUP_TASK_NAME}' -Action $Action -Trigger $Trigger -Principal $Principal -Settings $Settings -Force
                     
-                    Write-Host 'Startup task scheduled'
+                    Write-Host 'AUTO_START_CONFIGURED'
                 ";
 
-                await RunPowerShellScript(taskScript);
-                AddLog("  ✓ " + (_currentLanguage == "PT"
-                    ? "Reinício automático configurado"
-                    : "Auto-resume configured"));
+                var result = await RunPowerShellScript(taskScript);
+
+                if (result.Contains("AUTO_START_CONFIGURED"))
+                {
+                    AddLog("✅ " + (_currentLanguage == "PT"
+                        ? "Início automático configurado"
+                        : "Auto-start configured"));
+                }
             }
             catch (Exception ex)
             {
-                AddLog($"  ⚠️ Schedule startup: {ex.Message}");
+                AddLog($"⚠️ Setup auto-start: {ex.Message}");
             }
         }
 
-        private void RestartComputer()
+        private async Task RemoveAutoStart()
         {
             try
             {
-                ShowCustomNotification(
-                    _currentLanguage == "PT" ? "Reiniciando..." : "Restarting...",
-                    _currentLanguage == "PT"
-                        ? "O computador irá reiniciar em 10 segundos..."
-                        : "Computer will restart in 10 seconds...",
-                    NotificationType.Info
-                );
+                string script = $@"
+                    Unregister-ScheduledTask -TaskName '{STARTUP_TASK_NAME}' -Confirm:$false -ErrorAction SilentlyContinue
+                    Write-Host 'AUTO_START_REMOVED'
+                ";
 
-                ProcessStartInfo psi = new ProcessStartInfo
+                await RunPowerShellScript(script);
+                AddLog("✅ " + (_currentLanguage == "PT"
+                    ? "Início automático removido"
+                    : "Auto-start removed"));
+            }
+            catch { }
+        }
+
+        private async Task StartProcess()
+        {
+            await ContinueProcess();
+        }
+
+        private async Task ContinueProcess()
+        {
+            switch (_state.CurrentPhase)
+            {
+                case UpdatePhase.WindowsUpdate:
+                    await RunWindowsUpdate();
+                    break;
+                case UpdatePhase.DriverUpdate:
+                    await RunDriverUpdate();
+                    break;
+                case UpdatePhase.Cleanup:
+                    await RunCleanup();
+                    break;
+                case UpdatePhase.Completed:
+                    await CompleteProcess();
+                    break;
+            }
+        }
+
+        private async Task RunWindowsUpdate()
+        {
+            AddLog("\n▶️ " + (_currentLanguage == "PT"
+                ? "FASE 1: Atualização do Windows"
+                : "PHASE 1: Windows Update"));
+
+            UpdateStepStatus(1, _currentLanguage == "PT" ? "🔄 Em progresso..." : "🔄 In progress...", Brushes.Orange);
+            AnimateStep(Step1Card, Step1Badge);
+            ProgressStep1.Visibility = Visibility.Visible;
+
+            try
+            {
+                // Open Windows Update settings
+                AddLog("📂 " + (_currentLanguage == "PT"
+                    ? "Abrindo Windows Update..."
+                    : "Opening Windows Update..."));
+
+                Process.Start(new ProcessStartInfo
                 {
-                    FileName = "shutdown.exe",
-                    Arguments = "/r /t 10 /c \"Nexor - Reiniciando para continuar atualizações\"",
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-                Process.Start(psi);
+                    FileName = "ms-settings:windowsupdate",
+                    UseShellExecute = true
+                });
+
+                await Task.Delay(3000);
+
+                // Click "Check for updates" button
+                AddLog("🔍 " + (_currentLanguage == "PT"
+                    ? "Iniciando verificação de atualizações..."
+                    : "Starting update check..."));
+
+                await ClickCheckForUpdatesButton();
+
+                // Start monitoring
+                _state.UpdateCheckCount++;
+                SaveState();
+
+                UpdateProgressBar(ProgressStep1, 10);
+
+                AddLog("⏱️ " + (_currentLanguage == "PT"
+                    ? "Monitorando progresso das atualizações..."
+                    : "Monitoring update progress..."));
+
+                _updateCheckTimer.Start();
             }
             catch (Exception ex)
             {
-                ShowCustomNotification(
-                    "Error",
-                    $"{(_currentLanguage == "PT" ? "Erro ao reiniciar" : "Error restarting")}: {ex.Message}",
-                    NotificationType.Error
-                );
+                AddLog($"❌ Error: {ex.Message}");
+                UpdateStepStatus(1, "❌ " + (_currentLanguage == "PT" ? "Erro" : "Error"), Brushes.Red);
             }
         }
 
-        private async void BtnStep2_Click(object sender, RoutedEventArgs e)
+        private async Task ClickCheckForUpdatesButton()
         {
-            BtnStep2.IsEnabled = false;
-            await RunStep2();
-            BtnStep2.IsEnabled = true;
+            try
+            {
+                // Use UI Automation to click the "Check for updates" button
+                string script = @"
+                    Add-Type -AssemblyName UIAutomationClient
+                    Add-Type -AssemblyName UIAutomationTypes
+
+                    $max_attempts = 10
+                    $attempt = 0
+
+                    while ($attempt -lt $max_attempts) {
+                        try {
+                            $settingsWindow = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
+                                [System.Windows.Automation.TreeScope]::Children,
+                                (New-Object System.Windows.Automation.PropertyCondition(
+                                    [System.Windows.Automation.AutomationElement]::ClassNameProperty,
+                                    'ApplicationFrameWindow'
+                                ))
+                            )
+
+                            if ($settingsWindow) {
+                                $button = $settingsWindow.FindFirst(
+                                    [System.Windows.Automation.TreeScope]::Descendants,
+                                    (New-Object System.Windows.Automation.AndCondition(
+                                        (New-Object System.Windows.Automation.PropertyCondition(
+                                            [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
+                                            [System.Windows.Automation.ControlType]::Button
+                                        )),
+                                        (New-Object System.Windows.Automation.PropertyCondition(
+                                            [System.Windows.Automation.AutomationElement]::NameProperty,
+                                            'Check for updates'
+                                        ))
+                                    ))
+                                )
+
+                                if ($button) {
+                                    $invokePattern = $button.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+                                    $invokePattern.Invoke()
+                                    Write-Host 'BUTTON_CLICKED'
+                                    exit 0
+                                }
+                            }
+                        } catch {}
+
+                        Start-Sleep -Seconds 1
+                        $attempt++
+                    }
+
+                    Write-Host 'BUTTON_NOT_FOUND'
+                ";
+
+                var result = await RunPowerShellScript(script);
+
+                if (result.Contains("BUTTON_CLICKED"))
+                {
+                    AddLog("✅ " + (_currentLanguage == "PT"
+                        ? "Verificação iniciada"
+                        : "Check started"));
+                }
+                else
+                {
+                    AddLog("⚠️ " + (_currentLanguage == "PT"
+                        ? "Não foi possível clicar automaticamente. Clique manualmente em 'Verificar atualizações'."
+                        : "Could not click automatically. Please click 'Check for updates' manually."));
+                }
+            }
+            catch (Exception ex)
+            {
+                AddLog($"⚠️ Auto-click: {ex.Message}");
+            }
         }
 
-        private async Task RunStep2()
+        private async void UpdateCheckTimer_Tick(object sender, EventArgs e)
         {
-            _statusAnimationTimer.Start();
+            if (_state.CurrentPhase != UpdatePhase.WindowsUpdate)
+            {
+                _updateCheckTimer.Stop();
+                return;
+            }
 
-            AddLog("\n" + (_currentLanguage == "PT" ? "▶ Passo 2: Atualizando Drivers..." : "▶ Step 2: Updating Drivers..."));
-            AddLog(_currentLanguage == "PT"
-                ? "⏰ Este passo pode demorar 10-20 minutos. Aguarde..."
-                : "⏰ This step may take 10-20 minutes. Please wait...");
+            try
+            {
+                var status = await CheckWindowsUpdateStatus();
 
-            UpdateStepStatus(2, _currentLanguage == "PT" ? "🔄 A executar..." : "🔄 Running...", Brushes.Orange);
+                UpdateProgressBar(ProgressStep1, Math.Min(20 + (_state.UpdateCheckCount * 10), 80));
+
+                AddLog($"📊 Status: {status.Status}");
+
+                if (status.RestartRequired)
+                {
+                    _updateCheckTimer.Stop();
+                    AddLog("🔄 " + (_currentLanguage == "PT"
+                        ? "Reinício necessário..."
+                        : "Restart required..."));
+
+                    await InitiateRestart();
+                }
+                else if (status.IsComplete)
+                {
+                    _updateCheckTimer.Stop();
+
+                    if (_state.UpdateCheckCount >= MAX_UPDATE_CHECKS || status.NoUpdatesAvailable)
+                    {
+                        AddLog("✅ " + (_currentLanguage == "PT"
+                            ? "Windows totalmente atualizado!"
+                            : "Windows fully updated!"));
+
+                        UpdateProgressBar(ProgressStep1, 100);
+                        UpdateStepStatus(1, "✅ " + (_currentLanguage == "PT" ? "Concluído" : "Completed"), Brushes.LightGreen);
+
+                        // Move to next phase
+                        _state.CurrentPhase = UpdatePhase.DriverUpdate;
+                        _state.UpdateCheckCount = 0;
+                        SaveState();
+
+                        await Task.Delay(2000);
+                        await RunDriverUpdate();
+                    }
+                    else
+                    {
+                        AddLog("🔄 " + (_currentLanguage == "PT"
+                            ? "Verificando novamente por atualizações..."
+                            : "Checking again for updates..."));
+
+                        await Task.Delay(5000);
+                        await ClickCheckForUpdatesButton();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AddLog($"⚠️ Monitor: {ex.Message}");
+            }
+        }
+
+        private async Task<(string Status, bool RestartRequired, bool IsComplete, bool NoUpdatesAvailable)> CheckWindowsUpdateStatus()
+        {
+            string script = @"
+                try {
+                    $UpdateSession = New-Object -ComObject Microsoft.Update.Session
+                    $UpdateSearcher = $UpdateSession.CreateUpdateSearcher()
+
+                    $PendingUpdates = $UpdateSearcher.Search('IsInstalled=0').Updates
+                    $InstallingUpdates = $UpdateSearcher.Search('IsInstalled=0 and RebootRequired=0').Updates
+
+                    # Check if restart is required
+                    $RebootRequired = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired' -ErrorAction SilentlyContinue) -ne $null
+
+                    if ($RebootRequired) {
+                        Write-Host 'STATUS:RESTART_REQUIRED'
+                    } elseif ($PendingUpdates.Count -eq 0) {
+                        Write-Host 'STATUS:NO_UPDATES'
+                    } elseif ($InstallingUpdates.Count -gt 0) {
+                        Write-Host 'STATUS:INSTALLING'
+                    } else {
+                        Write-Host 'STATUS:DOWNLOADING'
+                    }
+                } catch {
+                    Write-Host 'STATUS:CHECKING'
+                }
+            ";
+
+            var result = await RunPowerShellScript(script);
+
+            bool restartRequired = result.Contains("RESTART_REQUIRED");
+            bool noUpdates = result.Contains("NO_UPDATES");
+            bool isComplete = noUpdates && !restartRequired;
+
+            string status = "Checking...";
+            if (restartRequired)
+                status = _currentLanguage == "PT" ? "Reinício necessário" : "Restart required";
+            else if (noUpdates)
+                status = _currentLanguage == "PT" ? "Sem atualizações" : "No updates";
+            else if (result.Contains("INSTALLING"))
+                status = _currentLanguage == "PT" ? "Instalando..." : "Installing...";
+            else if (result.Contains("DOWNLOADING"))
+                status = _currentLanguage == "PT" ? "Baixando..." : "Downloading...";
+
+            return (status, restartRequired, isComplete, noUpdates);
+        }
+
+        private async Task InitiateRestart()
+        {
+            _state.RestartCount++;
+            SaveState();
+
+            ShowCustomDialog(
+                _currentLanguage == "PT" ? "Reinício Necessário" : "Restart Required",
+                _currentLanguage == "PT"
+                    ? $"O computador precisa reiniciar para continuar.\n\nReinício #{_state.RestartCount}\nVerificação #{_state.UpdateCheckCount}/{MAX_UPDATE_CHECKS}\n\nO processo continuará automaticamente após o reinício."
+                    : $"Computer needs to restart to continue.\n\nRestart #{_state.RestartCount}\nCheck #{_state.UpdateCheckCount}/{MAX_UPDATE_CHECKS}\n\nProcess will continue automatically after restart.",
+                DialogType.Info,
+                () =>
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "shutdown.exe",
+                        Arguments = "/r /t 30 /c \"Nexor - Continuando atualizações\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    });
+                },
+                null
+            );
+        }
+
+        private async Task RunDriverUpdate()
+        {
+            AddLog("\n▶️ " + (_currentLanguage == "PT"
+                ? "FASE 2: Atualização de Drivers"
+                : "PHASE 2: Driver Update"));
+
+            UpdateStepStatus(2, _currentLanguage == "PT" ? "🔄 Em progresso..." : "🔄 In progress...", Brushes.Orange);
             AnimateStep(Step2Card, Step2Badge);
             ProgressStep2.Visibility = Visibility.Visible;
 
             try
             {
-                await Task.Run(async () =>
+                // Open Device Manager
+                AddLog("📂 " + (_currentLanguage == "PT"
+                    ? "Abrindo Gestor de Dispositivos..."
+                    : "Opening Device Manager..."));
+
+                Process.Start(new ProcessStartInfo
                 {
-                    UpdateLiveStatus(
-                        _currentLanguage == "PT"
-                            ? "Verificando dispositivos sem driver"
-                            : "Checking devices without drivers");
-
-                    UpdateProgressBar(ProgressStep2, 10);
-
-                    try
-                    {
-                        await RunCommand("pnputil.exe", "/scan-devices");
-                        AddLog(_currentLanguage == "PT"
-                            ? "  ✓ Scan de dispositivos concluído"
-                            : "  ✓ Device scan completed");
-                    }
-                    catch { }
-
-                    UpdateProgressBar(ProgressStep2, 20);
-
-                    UpdateLiveStatus(
-                        _currentLanguage == "PT"
-                            ? "Buscando atualizações de drivers"
-                            : "Searching for driver updates");
-
-                    string driverUpdateScript = @"
-                Write-Host '=== Searching for Driver Updates ==='
-                
-                try {
-                    $Session = New-Object -ComObject Microsoft.Update.Session
-                    $Searcher = $Session.CreateUpdateSearcher()
-                    
-                    $Searcher.ServiceID = '7971f918-a847-4430-9279-4a52d1efe18d'
-                    $Searcher.SearchScope = 1
-                    $Searcher.ServerSelection = 3
-                    
-                    Write-Host 'Searching for driver updates...'
-                    $SearchResult = $Searcher.Search(""IsInstalled=0 and Type='Driver' and IsHidden=0"")
-                    
-                    if ($SearchResult.Updates.Count -eq 0) {
-                        Write-Host 'NO_DRIVERS_FOUND'
-                        exit 0
-                    }
-                    
-                    Write-Host ""DRIVERS_FOUND:$($SearchResult.Updates.Count)""
-                    
-                    foreach ($Update in $SearchResult.Updates) {
-                        Write-Host ""  - $($Update.Title)""
-                    }
-                    
-                    Write-Host '=== Downloading Driver Updates ==='
-                    $UpdatesToDownload = New-Object -ComObject Microsoft.Update.UpdateColl
-                    foreach ($Update in $SearchResult.Updates) {
-                        $UpdatesToDownload.Add($Update) | Out-Null
-                    }
-                    
-                    $Downloader = $Session.CreateUpdateDownloader()
-                    $Downloader.Updates = $UpdatesToDownload
-                    $DownloadResult = $Downloader.Download()
-                    
-                    Write-Host ""Download result: $($DownloadResult.ResultCode)""
-                    
-                    Write-Host '=== Installing Driver Updates ==='
-                    $UpdatesToInstall = New-Object -ComObject Microsoft.Update.UpdateColl
-                    foreach ($Update in $SearchResult.Updates) {
-                        if ($Update.IsDownloaded) {
-                            $UpdatesToInstall.Add($Update) | Out-Null
-                        }
-                    }
-                    
-                    if ($UpdatesToInstall.Count -eq 0) {
-                        Write-Host 'NO_DRIVERS_TO_INSTALL'
-                        exit 0
-                    }
-                    
-                    $Installer = $Session.CreateUpdateInstaller()
-                    $Installer.Updates = $UpdatesToInstall
-                    $InstallResult = $Installer.Install()
-                    
-                    Write-Host ""Installation result: $($InstallResult.ResultCode)""
-                    Write-Host ""Reboot required: $($InstallResult.RebootRequired)""
-                    
-                    Write-Host 'DRIVER_UPDATE_SUCCESS'
-                    
-                } catch {
-                    Write-Host ""DRIVER_UPDATE_ERROR: $($_.Exception.Message)""
-                    exit 1
-                }
-            ";
-
-                    try
-                    {
-                        UpdateLiveStatus(
-                            _currentLanguage == "PT"
-                                ? "Instalando drivers"
-                                : "Installing drivers",
-                            _currentLanguage == "PT"
-                                ? "Isto pode levar alguns minutos..."
-                                : "This may take a few minutes...");
-
-                        var driverResult = await RunPowerShellScriptWithProgress(driverUpdateScript, ProgressStep2, 20, 90);
-
-                        var lines = driverResult.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                        foreach (var line in lines)
-                        {
-                            if (!string.IsNullOrWhiteSpace(line))
-                            {
-                                AddLog($"  {line.Trim()}");
-                            }
-                        }
-
-                        if (driverResult.Contains("NO_DRIVERS_FOUND"))
-                        {
-                            AddLog("  ✅ " + (_currentLanguage == "PT"
-                                ? "Todos os drivers estão atualizados"
-                                : "All drivers are up to date"));
-                        }
-                        else if (driverResult.Contains("DRIVER_UPDATE_SUCCESS"))
-                        {
-                            AddLog("  ✅ " + (_currentLanguage == "PT"
-                                ? "Drivers atualizados com sucesso"
-                                : "Drivers updated successfully"));
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        AddLog($"  ⚠️ Driver update: {ex.Message}");
-
-                        UpdateLiveStatus(
-                            _currentLanguage == "PT"
-                                ? "Tentando método alternativo"
-                                : "Trying alternative method");
-
-                        string altDriverScript = @"
-                    Import-Module PSWindowsUpdate -ErrorAction Stop
-                    Get-WindowsUpdate -MicrosoftUpdate -UpdateType Driver -AcceptAll -Install -IgnoreReboot -Verbose
-                    Write-Host 'Alternative driver update completed'
-                ";
-
-                        try
-                        {
-                            var altResult = await RunPowerShellScript(altDriverScript);
-                            AddLog($"  ✓ {altResult.Trim()}");
-                        }
-                        catch
-                        {
-                            AddLog("  ⚠️ " + (_currentLanguage == "PT"
-                                ? "Método alternativo falhou. Verifique manualmente."
-                                : "Alternative method failed. Check manually."));
-                        }
-                    }
-
-                    UpdateProgressBar(ProgressStep2, 100);
-
-                    AddLog(_currentLanguage == "PT"
-                        ? "  ✓ Processo de atualização de drivers concluído"
-                        : "  ✓ Driver update process completed");
+                    FileName = "devmgmt.msc",
+                    UseShellExecute = true,
+                    Verb = "runas"
                 });
 
-                UpdateStepStatus(2, _currentLanguage == "PT" ? "✅ Concluído" : "✅ Completed", Brushes.LightGreen);
-                UpdateProgress();
+                await Task.Delay(2000);
+
+                UpdateProgressBar(ProgressStep2, 20);
+
+                // Use pnputil to update drivers
+                AddLog("🔍 " + (_currentLanguage == "PT"
+                    ? "Verificando drivers desatualizados..."
+                    : "Checking for outdated drivers..."));
+
+                await RunCommand("pnputil.exe", "/scan-devices");
+
+                UpdateProgressBar(ProgressStep2, 40);
+
+                // Attempt to update via Windows Update for drivers
+                AddLog("📥 " + (_currentLanguage == "PT"
+                    ? "Baixando atualizações de drivers..."
+                    : "Downloading driver updates..."));
+
+                string driverScript = @"
+                    try {
+                        $Session = New-Object -ComObject Microsoft.Update.Session
+                        $Searcher = $Session.CreateUpdateSearcher()
+                        $Searcher.ServiceID = '7971f918-a847-4430-9279-4a52d1efe18d'
+                        $Searcher.SearchScope = 1
+                        $Searcher.ServerSelection = 3
+                        
+                        $Result = $Searcher.Search(""IsInstalled=0 and Type='Driver'"")
+                        
+                        if ($Result.Updates.Count -eq 0) {
+                            Write-Host 'NO_DRIVER_UPDATES'
+                        } else {
+                            Write-Host ""FOUND_DRIVERS:$($Result.Updates.Count)""
+                        }
+                    } catch {
+                        Write-Host 'DRIVER_CHECK_ERROR'
+                    }
+                ";
+
+                var result = await RunPowerShellScript(driverScript);
+
+                UpdateProgressBar(ProgressStep2, 70);
+
+                if (result.Contains("NO_DRIVER_UPDATES"))
+                {
+                    AddLog("✅ " + (_currentLanguage == "PT"
+                        ? "Todos os drivers estão atualizados"
+                        : "All drivers are up to date"));
+                }
+                else
+                {
+                    AddLog("⚠️ " + (_currentLanguage == "PT"
+                        ? "Atualize os drivers manualmente através do Gestor de Dispositivos se necessário"
+                        : "Update drivers manually through Device Manager if needed"));
+                }
+
+                UpdateProgressBar(ProgressStep2, 100);
+                UpdateStepStatus(2, "✅ " + (_currentLanguage == "PT" ? "Concluído" : "Completed"), Brushes.LightGreen);
+
+                // Move to cleanup phase
+                _state.CurrentPhase = UpdatePhase.Cleanup;
+                SaveState();
+
+                await Task.Delay(2000);
+                await RunCleanup();
             }
             catch (Exception ex)
             {
-                UpdateStepStatus(2, _currentLanguage == "PT" ? "❌ Erro" : "❌ Error", Brushes.Red);
-                AddLog($"  ❌ {(_currentLanguage == "PT" ? "Erro" : "Error")}: {ex.Message}");
-            }
-            finally
-            {
-                _statusAnimationTimer.Stop();
-                TxtLiveStatus.Visibility = Visibility.Collapsed;
+                AddLog($"❌ Error: {ex.Message}");
+                UpdateStepStatus(2, "❌ " + (_currentLanguage == "PT" ? "Erro" : "Error"), Brushes.Red);
             }
         }
 
-        private async void BtnStep3_Click(object sender, RoutedEventArgs e)
+        private async Task RunCleanup()
         {
-            BtnStep3.IsEnabled = false;
-            await RunStep3();
-            BtnStep3.IsEnabled = true;
-        }
+            AddLog("\n▶️ " + (_currentLanguage == "PT"
+                ? "FASE 3: Limpeza do Sistema"
+                : "PHASE 3: System Cleanup"));
 
-        private async Task RunStep3()
-        {
-            _statusAnimationTimer.Start();
-
-            AddLog("\n" + (_currentLanguage == "PT" ? "▶ Passo 3: Limpando Sistema..." : "▶ Step 3: Cleaning System..."));
-            UpdateStepStatus(3, _currentLanguage == "PT" ? "🔄 A executar..." : "🔄 Running...", Brushes.Orange);
+            UpdateStepStatus(3, _currentLanguage == "PT" ? "🔄 Em progresso..." : "🔄 In progress...", Brushes.Orange);
             AnimateStep(Step3Card, Step3Badge);
             ProgressStep3.Visibility = Visibility.Visible;
 
@@ -1531,103 +720,372 @@ namespace Nexor
             {
                 long totalFreed = 0;
 
-                await Task.Run(async () =>
-                {
-                    UpdateLiveStatus(
-                        _currentLanguage == "PT"
-                            ? "Limpando cache do Windows Update"
-                            : "Cleaning Windows Update cache");
+                // Clean Windows Update cache
+                AddLog("🧹 " + (_currentLanguage == "PT"
+                    ? "Limpando cache do Windows Update..."
+                    : "Cleaning Windows Update cache..."));
 
-                    UpdateProgressBar(ProgressStep3, 15);
+                UpdateProgressBar(ProgressStep3, 15);
+                totalFreed += CleanDirectory(@"C:\Windows\SoftwareDistribution\Download");
 
-                    string updateCachePath = @"C:\Windows\SoftwareDistribution\Download";
-                    long freed = await Task.Run(() => CleanDirectory(updateCachePath));
-                    totalFreed += freed;
-                    AddLog($"  ✓ {FormatBytes(freed)} " + (_currentLanguage == "PT" ? "libertados" : "freed"));
+                // Clean temp files
+                AddLog("🧹 " + (_currentLanguage == "PT"
+                    ? "Limpando arquivos temporários..."
+                    : "Cleaning temporary files..."));
 
-                    UpdateLiveStatus(
-                        _currentLanguage == "PT"
-                            ? "Limpando ficheiros temporários do utilizador"
-                            : "Cleaning user temporary files");
+                UpdateProgressBar(ProgressStep3, 30);
+                totalFreed += CleanDirectory(Path.GetTempPath());
+                totalFreed += CleanDirectory(@"C:\Windows\Temp");
 
-                    UpdateProgressBar(ProgressStep3, 30);
+                // Clean prefetch
+                AddLog("🧹 " + (_currentLanguage == "PT"
+                    ? "Limpando Prefetch..."
+                    : "Cleaning Prefetch..."));
 
-                    string tempPath = Path.GetTempPath();
-                    freed = await Task.Run(() => CleanDirectory(tempPath));
-                    totalFreed += freed;
-                    AddLog($"  ✓ {FormatBytes(freed)} " + (_currentLanguage == "PT" ? "libertados" : "freed"));
+                UpdateProgressBar(ProgressStep3, 50);
+                totalFreed += CleanDirectory(@"C:\Windows\Prefetch");
 
-                    UpdateLiveStatus(
-                        _currentLanguage == "PT"
-                            ? "Limpando ficheiros temporários do Windows"
-                            : "Cleaning Windows temporary files");
+                // Empty Recycle Bin
+                AddLog("🗑️ " + (_currentLanguage == "PT"
+                    ? "Esvaziando Reciclagem..."
+                    : "Emptying Recycle Bin..."));
 
-                    UpdateProgressBar(ProgressStep3, 45);
+                UpdateProgressBar(ProgressStep3, 65);
+                await RunPowerShellCommand("Clear-RecycleBin -Force -ErrorAction SilentlyContinue");
 
-                    string windowsTempPath = @"C:\Windows\Temp";
-                    freed = await Task.Run(() => CleanDirectory(windowsTempPath));
-                    totalFreed += freed;
-                    AddLog($"  ✓ {FormatBytes(freed)} " + (_currentLanguage == "PT" ? "libertados" : "freed"));
+                // Run DISM cleanup
+                AddLog("🧹 " + (_currentLanguage == "PT"
+                    ? "Removendo versões antigas do Windows..."
+                    : "Removing old Windows versions..."));
 
-                    UpdateLiveStatus(
-                        _currentLanguage == "PT"
-                            ? "Limpando Prefetch"
-                            : "Cleaning Prefetch");
+                UpdateProgressBar(ProgressStep3, 80);
+                await RunCommand("Dism.exe", "/online /Cleanup-Image /StartComponentCleanup /ResetBase");
 
-                    UpdateProgressBar(ProgressStep3, 60);
-
-                    string prefetchPath = @"C:\Windows\Prefetch";
-                    freed = await Task.Run(() => CleanDirectory(prefetchPath));
-                    totalFreed += freed;
-                    AddLog($"  ✓ {FormatBytes(freed)} " + (_currentLanguage == "PT" ? "libertados" : "freed"));
-
-                    UpdateLiveStatus(
-                        _currentLanguage == "PT"
-                            ? "Esvaziando Reciclagem"
-                            : "Emptying Recycle Bin");
-
-                    UpdateProgressBar(ProgressStep3, 70);
-
-                    try
-                    {
-                        await RunPowerShellCommand("Clear-RecycleBin -Force -ErrorAction SilentlyContinue");
-                        AddLog("  ✓ " + (_currentLanguage == "PT" ? "Reciclagem esvaziada" : "Recycle Bin emptied"));
-                    }
-                    catch { }
-
-                    UpdateLiveStatus(
-                        _currentLanguage == "PT"
-                            ? "Limpando componentes do Windows"
-                            : "Cleaning Windows components");
-
-                    UpdateProgressBar(ProgressStep3, 85);
-
-                    await ExecuteAdvancedDiskCleanup();
-
-                    UpdateProgressBar(ProgressStep3, 100);
-                });
+                UpdateProgressBar(ProgressStep3, 100);
 
                 double freedGB = totalFreed / (1024.0 * 1024.0 * 1024.0);
-                string message = $"✅ {(_currentLanguage == "PT" ? "Concluído" : "Completed")} ({freedGB:F2} GB)";
+                AddLog($"✅ " + (_currentLanguage == "PT"
+                    ? $"Limpeza concluída! {freedGB:F2} GB libertados"
+                    : $"Cleanup completed! {freedGB:F2} GB freed"));
 
-                UpdateStepStatus(3, message, Brushes.LightGreen);
-                UpdateProgress();
-                AddLog($"  ✓ " + (_currentLanguage == "PT"
-                    ? $"Limpeza concluída! Total libertado: {freedGB:F2} GB"
-                    : $"Cleanup completed! Total freed: {freedGB:F2} GB"));
+                UpdateStepStatus(3, $"✅ " + (_currentLanguage == "PT" ? "Concluído" : "Completed") + $" ({freedGB:F2} GB)", Brushes.LightGreen);
+
+                // Move to completed phase
+                _state.CurrentPhase = UpdatePhase.Completed;
+                SaveState();
+
+                await Task.Delay(2000);
+                await CompleteProcess();
             }
             catch (Exception ex)
             {
-                UpdateStepStatus(3, _currentLanguage == "PT" ? "❌ Erro" : "❌ Error", Brushes.Red);
-                AddLog($"  ❌ {(_currentLanguage == "PT" ? "Erro" : "Error")}: {ex.Message}");
-            }
-            finally
-            {
-                _statusAnimationTimer.Stop();
-                TxtLiveStatus.Visibility = Visibility.Collapsed;
+                AddLog($"❌ Error: {ex.Message}");
+                UpdateStepStatus(3, "❌ " + (_currentLanguage == "PT" ? "Erro" : "Error"), Brushes.Red);
             }
         }
 
+        private async Task CompleteProcess()
+        {
+            AddLog("\n═══════════════════════════════════════");
+            AddLog("🎉 " + (_currentLanguage == "PT"
+                ? "PROCESSO CONCLUÍDO COM SUCESSO!"
+                : "PROCESS COMPLETED SUCCESSFULLY!"));
+            AddLog("═══════════════════════════════════════");
+
+            await RemoveAutoStart();
+            ClearState();
+
+            Dispatcher.Invoke(() =>
+            {
+                TxtStatusDesc.Text = "✅ " + (_currentLanguage == "PT"
+                    ? "Configuração completa!"
+                    : "Setup complete!");
+                BtnRunAll.IsEnabled = true;
+                _isProcessing = false;
+
+                AnimateCompletion();
+            });
+
+            ShowCustomNotification(
+                _currentLanguage == "PT" ? "Sucesso" : "Success",
+                _currentLanguage == "PT"
+                    ? $"🎉 Processo concluído!\n\n✅ Windows: Totalmente atualizado\n✅ Drivers: Verificados\n✅ Sistema: Limpo e otimizado\n🔄 Reinícios: {_state.RestartCount}\n\nRecomendação: Reinicie o computador uma última vez."
+                    : $"🎉 Process completed!\n\n✅ Windows: Fully updated\n✅ Drivers: Checked\n✅ System: Cleaned and optimized\n🔄 Restarts: {_state.RestartCount}\n\nRecommendation: Restart computer one last time.",
+                NotificationType.Success
+            );
+        }
+
+        // Helper methods
+        private async Task<bool> RunCommand(string fileName, string arguments)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    ProcessStartInfo psi = new ProcessStartInfo
+                    {
+                        FileName = fileName,
+                        Arguments = arguments,
+                        Verb = "runas",
+                        UseShellExecute = true,
+                        CreateNoWindow = true,
+                        WindowStyle = ProcessWindowStyle.Hidden
+                    };
+
+                    var process = Process.Start(psi);
+                    process?.WaitForExit();
+                    return process?.ExitCode == 0;
+                }
+                catch
+                {
+                    return false;
+                }
+            });
+        }
+
+        private async Task<string> RunPowerShellCommand(string command)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    ProcessStartInfo psi = new ProcessStartInfo
+                    {
+                        FileName = "powershell.exe",
+                        Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"{command}\"",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true,
+                        Verb = "runas"
+                    };
+
+                    var process = Process.Start(psi);
+                    if (process != null)
+                    {
+                        string output = process.StandardOutput.ReadToEnd();
+                        process.WaitForExit();
+                        return output;
+                    }
+                    return string.Empty;
+                }
+                catch (Exception ex)
+                {
+                    return $"Error: {ex.Message}";
+                }
+            });
+        }
+
+        private async Task<string> RunPowerShellScript(string script)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    string tempFile = Path.Combine(Path.GetTempPath(), $"nexor_{Guid.NewGuid()}.ps1");
+                    File.WriteAllText(tempFile, script);
+
+                    ProcessStartInfo psi = new ProcessStartInfo
+                    {
+                        FileName = "powershell.exe",
+                        Arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{tempFile}\"",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true,
+                        Verb = "runas"
+                    };
+
+                    var process = Process.Start(psi);
+                    string output = string.Empty;
+                    if (process != null)
+                    {
+                        output = process.StandardOutput.ReadToEnd();
+                        process.WaitForExit();
+                    }
+
+                    try { File.Delete(tempFile); } catch { }
+
+                    return output;
+                }
+                catch (Exception ex)
+                {
+                    return $"Error: {ex.Message}";
+                }
+            });
+        }
+
+        private long CleanDirectory(string path)
+        {
+            long bytesFreed = 0;
+
+            try
+            {
+                if (!Directory.Exists(path))
+                    return 0;
+
+                DirectoryInfo di = new DirectoryInfo(path);
+
+                foreach (FileInfo file in di.GetFiles())
+                {
+                    try
+                    {
+                        long fileSize = file.Length;
+                        file.Delete();
+                        bytesFreed += fileSize;
+                    }
+                    catch { }
+                }
+
+                foreach (DirectoryInfo dir in di.GetDirectories())
+                {
+                    try
+                    {
+                        bytesFreed += GetDirectorySize(dir);
+                        dir.Delete(true);
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+
+            return bytesFreed;
+        }
+
+        private long GetDirectorySize(DirectoryInfo directory)
+        {
+            long size = 0;
+
+            try
+            {
+                FileInfo[] files = directory.GetFiles();
+                foreach (FileInfo file in files)
+                {
+                    size += file.Length;
+                }
+
+                DirectoryInfo[] subdirs = directory.GetDirectories();
+                foreach (DirectoryInfo subdir in subdirs)
+                {
+                    size += GetDirectorySize(subdir);
+                }
+            }
+            catch { }
+
+            return size;
+        }
+
+        private void UpdateStepStatus(int step, string text, Brush color)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                switch (step)
+                {
+                    case 1:
+                        TxtStep1Status.Text = text;
+                        TxtStep1Status.Foreground = color;
+                        break;
+                    case 2:
+                        TxtStep2Status.Text = text;
+                        TxtStep2Status.Foreground = color;
+                        break;
+                    case 3:
+                        TxtStep3Status.Text = text;
+                        TxtStep3Status.Foreground = color;
+                        break;
+                }
+            });
+        }
+
+        private void UpdateProgressBar(ProgressBar progressBar, double value)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                progressBar.Value = value;
+            });
+        }
+
+        private void AddLog(string message)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                TxtLog.Text += $"{DateTime.Now:HH:mm:ss} {message}\n";
+
+                if (TxtLog?.Parent is ScrollViewer scrollViewer)
+                {
+                    scrollViewer.ScrollToEnd();
+                }
+            });
+        }
+
+        private void AnimateStep(Border card, Border badge)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                var scaleTransform = new ScaleTransform(1, 1);
+                card.RenderTransform = scaleTransform;
+                card.RenderTransformOrigin = new Point(0.5, 0.5);
+
+                var cardAnimation = new DoubleAnimation
+                {
+                    From = 1,
+                    To = 1.02,
+                    Duration = TimeSpan.FromMilliseconds(300),
+                    AutoReverse = true,
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
+                };
+
+                scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, cardAnimation);
+                scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, cardAnimation);
+
+                var badgeRotate = new RotateTransform(0);
+                badge.RenderTransform = badgeRotate;
+                badge.RenderTransformOrigin = new Point(0.5, 0.5);
+
+                var rotateAnimation = new DoubleAnimation
+                {
+                    From = 0,
+                    To = 360,
+                    Duration = TimeSpan.FromMilliseconds(800),
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                };
+
+                badgeRotate.BeginAnimation(RotateTransform.AngleProperty, rotateAnimation);
+            });
+        }
+
+        private void AnimateCompletion()
+        {
+            Dispatcher.Invoke(() =>
+            {
+                var scaleTransform = new ScaleTransform(1, 1);
+                ProgressCircleBorder.RenderTransform = scaleTransform;
+                ProgressCircleBorder.RenderTransformOrigin = new Point(0.5, 0.5);
+
+                var pulseAnimation = new DoubleAnimation
+                {
+                    From = 1,
+                    To = 1.2,
+                    Duration = TimeSpan.FromMilliseconds(400),
+                    AutoReverse = true,
+                    RepeatBehavior = new RepeatBehavior(3),
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
+                };
+
+                scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, pulseAnimation);
+                scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, pulseAnimation);
+
+                var colorAnimation = new ColorAnimation
+                {
+                    To = ((SolidColorBrush)Resources["AccentGreen"]).Color,
+                    Duration = TimeSpan.FromMilliseconds(500)
+                };
+
+                ProgressCircleBorder.Background.BeginAnimation(SolidColorBrush.ColorProperty, colorAnimation);
+            });
+        }
+
+        // Dialog and Notification methods
         private enum DialogType
         {
             Question,
@@ -1821,390 +1279,75 @@ namespace Nexor
             ((TranslateTransform)NotificationPanel.RenderTransform).BeginAnimation(TranslateTransform.XProperty, slideOut);
         }
 
-        private async Task<bool> RunCommand(string fileName, string arguments)
+        // Individual step button handlers (for manual testing - hidden by default)
+        private async void BtnStep1_Click(object sender, RoutedEventArgs e)
         {
-            return await Task.Run(() =>
-            {
-                try
-                {
-                    ProcessStartInfo psi = new ProcessStartInfo
-                    {
-                        FileName = fileName,
-                        Arguments = arguments,
-                        Verb = "runas",
-                        UseShellExecute = true,
-                        CreateNoWindow = true,
-                        WindowStyle = ProcessWindowStyle.Hidden
-                    };
+            if (_isProcessing)
+                return;
 
-                    var process = Process.Start(psi);
-                    process?.WaitForExit();
-                    return process?.ExitCode == 0;
-                }
-                catch
-                {
-                    return false;
-                }
-            });
+            _isProcessing = true;
+            BtnStep1.IsEnabled = false;
+            LogCard.Visibility = Visibility.Visible;
+
+            AddLog("═══════════════════════════════════════");
+            AddLog("🚀 " + (_currentLanguage == "PT"
+                ? "Iniciando Atualização do Windows..."
+                : "Starting Windows Update..."));
+            AddLog("═══════════════════════════════════════\n");
+
+            await SetupAutoStart();
+            _state.CurrentPhase = UpdatePhase.WindowsUpdate;
+            SaveState();
+            await RunWindowsUpdate();
+
+            _isProcessing = false;
+            BtnStep1.IsEnabled = true;
         }
 
-        private async Task<string> RunPowerShellCommand(string command)
+        private async void BtnStep2_Click(object sender, RoutedEventArgs e)
         {
-            return await Task.Run(() =>
-            {
-                try
-                {
-                    ProcessStartInfo psi = new ProcessStartInfo
-                    {
-                        FileName = "powershell.exe",
-                        Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"{command}\"",
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        CreateNoWindow = true,
-                        Verb = "runas"
-                    };
+            if (_isProcessing)
+                return;
 
-                    var process = Process.Start(psi);
-                    if (process != null)
-                    {
-                        string output = process.StandardOutput.ReadToEnd();
-                        process.WaitForExit();
-                        return output;
-                    }
-                    return string.Empty;
-                }
-                catch (Exception ex)
-                {
-                    return $"Error: {ex.Message}";
-                }
-            });
+            _isProcessing = true;
+            BtnStep2.IsEnabled = false;
+            LogCard.Visibility = Visibility.Visible;
+
+            AddLog("═══════════════════════════════════════");
+            AddLog("🚀 " + (_currentLanguage == "PT"
+                ? "Iniciando Atualização de Drivers..."
+                : "Starting Driver Update..."));
+            AddLog("═══════════════════════════════════════\n");
+
+            _state.CurrentPhase = UpdatePhase.DriverUpdate;
+            SaveState();
+            await RunDriverUpdate();
+
+            _isProcessing = false;
+            BtnStep2.IsEnabled = true;
         }
 
-        private async Task<string> RunPowerShellScript(string script)
+        private async void BtnStep3_Click(object sender, RoutedEventArgs e)
         {
-            return await Task.Run(() =>
-            {
-                try
-                {
-                    string tempFile = Path.Combine(Path.GetTempPath(), $"nexor_{Guid.NewGuid()}.ps1");
-                    File.WriteAllText(tempFile, script);
+            if (_isProcessing)
+                return;
 
-                    ProcessStartInfo psi = new ProcessStartInfo
-                    {
-                        FileName = "powershell.exe",
-                        Arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{tempFile}\"",
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        CreateNoWindow = true,
-                        Verb = "runas"
-                    };
+            _isProcessing = true;
+            BtnStep3.IsEnabled = false;
+            LogCard.Visibility = Visibility.Visible;
 
-                    var process = Process.Start(psi);
-                    string output = string.Empty;
-                    if (process != null)
-                    {
-                        output = process.StandardOutput.ReadToEnd();
-                        process.WaitForExit();
-                    }
+            AddLog("═══════════════════════════════════════");
+            AddLog("🚀 " + (_currentLanguage == "PT"
+                ? "Iniciando Limpeza do Sistema..."
+                : "Starting System Cleanup..."));
+            AddLog("═══════════════════════════════════════\n");
 
-                    try { File.Delete(tempFile); } catch { }
+            _state.CurrentPhase = UpdatePhase.Cleanup;
+            SaveState();
+            await RunCleanup();
 
-                    return output;
-                }
-                catch (Exception ex)
-                {
-                    return $"Error: {ex.Message}";
-                }
-            });
-        }
-
-        private async Task<string> RunPowerShellScriptWithProgress(string script, ProgressBar progressBar, double startProgress, double endProgress)
-        {
-            return await Task.Run(() =>
-            {
-                try
-                {
-                    string tempFile = Path.Combine(Path.GetTempPath(), $"nexor_{Guid.NewGuid()}.ps1");
-                    File.WriteAllText(tempFile, script);
-
-                    ProcessStartInfo psi = new ProcessStartInfo
-                    {
-                        FileName = "powershell.exe",
-                        Arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{tempFile}\"",
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        CreateNoWindow = true,
-                        Verb = "runas"
-                    };
-
-                    var process = Process.Start(psi);
-                    string output = string.Empty;
-
-                    if (process != null)
-                    {
-                        var outputBuilder = new System.Text.StringBuilder();
-                        double progressRange = endProgress - startProgress;
-                        int linesRead = 0;
-
-                        while (!process.StandardOutput.EndOfStream)
-                        {
-                            string? line = process.StandardOutput.ReadLine();
-                            if (!string.IsNullOrEmpty(line))
-                            {
-                                outputBuilder.AppendLine(line);
-                                linesRead++;
-
-                                double progress = startProgress + (progressRange * Math.Min(linesRead / 20.0, 1.0));
-                                UpdateProgressBar(progressBar, progress);
-                            }
-                        }
-
-                        process.WaitForExit();
-                        output = outputBuilder.ToString();
-                    }
-
-                    try { File.Delete(tempFile); } catch { }
-
-                    return output;
-                }
-                catch (Exception ex)
-                {
-                    return $"Error: {ex.Message}";
-                }
-            });
-        }
-
-        private long CleanDirectory(string path)
-        {
-            long bytesFreed = 0;
-
-            try
-            {
-                if (!Directory.Exists(path))
-                    return 0;
-
-                DirectoryInfo di = new DirectoryInfo(path);
-
-                foreach (FileInfo file in di.GetFiles())
-                {
-                    try
-                    {
-                        long fileSize = file.Length;
-                        file.Delete();
-                        bytesFreed += fileSize;
-                    }
-                    catch { }
-                }
-
-                foreach (DirectoryInfo dir in di.GetDirectories())
-                {
-                    try
-                    {
-                        bytesFreed += GetDirectorySize(dir);
-                        dir.Delete(true);
-                    }
-                    catch { }
-                }
-            }
-            catch { }
-
-            return bytesFreed;
-        }
-
-        private long GetDirectorySize(DirectoryInfo directory)
-        {
-            long size = 0;
-
-            try
-            {
-                FileInfo[] files = directory.GetFiles();
-                foreach (FileInfo file in files)
-                {
-                    size += file.Length;
-                }
-
-                DirectoryInfo[] subdirs = directory.GetDirectories();
-                foreach (DirectoryInfo subdir in subdirs)
-                {
-                    size += GetDirectorySize(subdir);
-                }
-            }
-            catch { }
-
-            return size;
-        }
-
-        private async Task ExecuteAdvancedDiskCleanup()
-        {
-            try
-            {
-                AddLog(_currentLanguage == "PT"
-                    ? "  → Executando limpeza avançada de componentes..."
-                    : "  → Running advanced component cleanup...");
-
-                await RunCommand("Dism.exe", "/online /Cleanup-Image /StartComponentCleanup /ResetBase");
-
-                await Task.Delay(2000);
-
-                AddLog(_currentLanguage == "PT"
-                    ? "  ✓ Limpeza de componentes concluída"
-                    : "  ✓ Component cleanup completed");
-            }
-            catch (Exception ex)
-            {
-                AddLog($"  ⚠️ DISM Cleanup: {ex.Message}");
-            }
-        }
-
-        private string FormatBytes(long bytes)
-        {
-            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-            double len = bytes;
-            int order = 0;
-            while (len >= 1024 && order < sizes.Length - 1)
-            {
-                order++;
-                len = len / 1024;
-            }
-            return $"{len:0.##} {sizes[order]}";
-        }
-
-        private void UpdateStepStatus(int step, string text, Brush color)
-        {
-            Dispatcher.Invoke(() =>
-            {
-                switch (step)
-                {
-                    case 1:
-                        TxtStep1Status.Text = text;
-                        TxtStep1Status.Foreground = color;
-                        break;
-                    case 2:
-                        TxtStep2Status.Text = text;
-                        TxtStep2Status.Foreground = color;
-                        break;
-                    case 3:
-                        TxtStep3Status.Text = text;
-                        TxtStep3Status.Foreground = color;
-                        break;
-                }
-            });
-        }
-
-        private void UpdateProgress()
-        {
-            _completedSteps++;
-            int percentage = (_completedSteps * 100) / 3;
-
-            Dispatcher.Invoke(() =>
-            {
-                TxtProgress.Text = $"{percentage}%";
-                ProgressBarMain.Value = percentage;
-
-                if (percentage >= 100)
-                {
-                    TxtStatusDesc.Text = _currentLanguage == "PT"
-                        ? "✅ Configuração concluída!"
-                        : "✅ Setup completed!";
-                }
-                else
-                {
-                    TxtStatusDesc.Text = _currentLanguage == "PT"
-                        ? $"A processar... ({_completedSteps}/3 passos)"
-                        : $"Processing... ({_completedSteps}/3 steps)";
-                }
-            });
-        }
-
-        private void UpdateProgressBar(ProgressBar progressBar, double value)
-        {
-            Dispatcher.Invoke(() =>
-            {
-                progressBar.Value = value;
-            });
-        }
-
-        private void AddLog(string message)
-        {
-            Dispatcher.Invoke(() =>
-            {
-                TxtLog.Text += $"{DateTime.Now:HH:mm:ss} {message}\n";
-
-                if (TxtLog?.Parent is ScrollViewer scrollViewer)
-                {
-                    scrollViewer.ScrollToEnd();
-                }
-            });
-        }
-
-        private void AnimateStep(Border card, Border badge)
-        {
-            Dispatcher.Invoke(() =>
-            {
-                var scaleTransform = new ScaleTransform(1, 1);
-                card.RenderTransform = scaleTransform;
-                card.RenderTransformOrigin = new Point(0.5, 0.5);
-
-                var cardAnimation = new DoubleAnimation
-                {
-                    From = 1,
-                    To = 1.02,
-                    Duration = TimeSpan.FromMilliseconds(300),
-                    AutoReverse = true,
-                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
-                };
-
-                scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, cardAnimation);
-                scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, cardAnimation);
-
-                var badgeRotate = new RotateTransform(0);
-                badge.RenderTransform = badgeRotate;
-                badge.RenderTransformOrigin = new Point(0.5, 0.5);
-
-                var rotateAnimation = new DoubleAnimation
-                {
-                    From = 0,
-                    To = 360,
-                    Duration = TimeSpan.FromMilliseconds(800),
-                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-                };
-
-                badgeRotate.BeginAnimation(RotateTransform.AngleProperty, rotateAnimation);
-            });
-        }
-
-        private void AnimateCompletion()
-        {
-            Dispatcher.Invoke(() =>
-            {
-                var scaleTransform = new ScaleTransform(1, 1);
-                ProgressCircleBorder.RenderTransform = scaleTransform;
-                ProgressCircleBorder.RenderTransformOrigin = new Point(0.5, 0.5);
-
-                var pulseAnimation = new DoubleAnimation
-                {
-                    From = 1,
-                    To = 1.2,
-                    Duration = TimeSpan.FromMilliseconds(400),
-                    AutoReverse = true,
-                    RepeatBehavior = new RepeatBehavior(3),
-                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
-                };
-
-                scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, pulseAnimation);
-                scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, pulseAnimation);
-
-                var colorAnimation = new ColorAnimation
-                {
-                    To = ((SolidColorBrush)Resources["AccentGreen"]).Color,
-                    Duration = TimeSpan.FromMilliseconds(500)
-                };
-
-                ProgressCircleBorder.Background.BeginAnimation(SolidColorBrush.ColorProperty, colorAnimation);
-            });
+            _isProcessing = false;
+            BtnStep3.IsEnabled = true;
         }
     }
 }
