@@ -239,6 +239,42 @@ namespace Nexor
                 TxtLabelRAM.Text = "Memória";
                 TxtLabelStorage.Text = "Armazenamento";
                 TxtLabelArch.Text = "Arquitetura";
+
+                // Fresh Setup Page
+                if (MainContentFrame.Content is FreshSetupPage freshSetupPage)
+                {
+                    freshSetupPage.TxtTitle.Text = "Configuração Inicial Windows 11";
+                    freshSetupPage.TxtSubtitle.Text = "Otimize o seu sistema após instalação limpa";
+                    freshSetupPage.TxtStatusTitle.Text = "Estado do Sistema";
+                    freshSetupPage.TxtStatusDesc.Text = "Pronto para configuração inicial";
+
+                    freshSetupPage.BtnRunAll.Content = "🚀 Executar Configuração Completa";
+
+                    freshSetupPage.TxtStep1Title.Text = "Atualizar Windows";
+                    freshSetupPage.TxtStep1Desc.Text = "Instalar todas as atualizações disponíveis do Windows 11 (múltiplos passes)";
+                    freshSetupPage.TxtStep1Status.Text = "⏳ Pendente";
+
+                    freshSetupPage.TxtStep2Title.Text = "Atualizar Drivers";
+                    freshSetupPage.TxtStep2Desc.Text = "Verificar e instalar drivers mais recentes para hardware";
+                    freshSetupPage.TxtStep2Status.Text = "⏳ Pendente";
+
+                    freshSetupPage.TxtStep3Title.Text = "Limpar Sistema";
+                    freshSetupPage.TxtStep3Desc.Text = "Remover ficheiros temporários, caches e versões antigas do Windows";
+                    freshSetupPage.TxtStep3Status.Text = "⏳ Pendente";
+
+                    freshSetupPage.TxtInfoTitle.Text = "ℹ️ Informação Importante";
+                    freshSetupPage.TxtInfo1.Text = "• Este processo pode demorar 30-90 minutos dependendo das atualizações";
+                    freshSetupPage.TxtInfo2.Text = "• É OBRIGATÓRIO executar como Administrador";
+                    freshSetupPage.TxtInfo3.Text = "• Mantenha o computador ligado e conectado à internet";
+                    freshSetupPage.TxtInfo4.Text = "• O sistema pode reiniciar automaticamente várias vezes";
+
+                    if (freshSetupPage.BtnStep1.Visibility == System.Windows.Visibility.Visible)
+                        freshSetupPage.BtnStep1.Content = "Iniciar";
+                    if (freshSetupPage.BtnStep2.Visibility == System.Windows.Visibility.Visible)
+                        freshSetupPage.BtnStep2.Content = "Iniciar";
+                    if (freshSetupPage.BtnStep3.Visibility == System.Windows.Visibility.Visible)
+                        freshSetupPage.BtnStep3.Content = "Iniciar";
+                }
             }
             else
             {
@@ -283,6 +319,42 @@ namespace Nexor
                 TxtLabelRAM.Text = "Memory";
                 TxtLabelStorage.Text = "Storage";
                 TxtLabelArch.Text = "Architecture";
+
+                // Fresh Setup Page
+                if (MainContentFrame.Content is FreshSetupPage freshSetupPage)
+                {
+                    freshSetupPage.TxtTitle.Text = "Fresh Windows 11 Setup";
+                    freshSetupPage.TxtSubtitle.Text = "Optimize your system after a clean installation";
+                    freshSetupPage.TxtStatusTitle.Text = "System Status";
+                    freshSetupPage.TxtStatusDesc.Text = "Ready for initial configuration";
+
+                    freshSetupPage.BtnRunAll.Content = "🚀 Run Complete Setup";
+
+                    freshSetupPage.TxtStep1Title.Text = "Update Windows";
+                    freshSetupPage.TxtStep1Desc.Text = "Install all available Windows 11 updates (multiple passes)";
+                    freshSetupPage.TxtStep1Status.Text = "⏳ Pending";
+
+                    freshSetupPage.TxtStep2Title.Text = "Update Drivers";
+                    freshSetupPage.TxtStep2Desc.Text = "Check and install latest drivers for hardware";
+                    freshSetupPage.TxtStep2Status.Text = "⏳ Pending";
+
+                    freshSetupPage.TxtStep3Title.Text = "Clean System";
+                    freshSetupPage.TxtStep3Desc.Text = "Remove temporary files, caches and old Windows versions";
+                    freshSetupPage.TxtStep3Status.Text = "⏳ Pending";
+
+                    freshSetupPage.TxtInfoTitle.Text = "ℹ️ Important Information";
+                    freshSetupPage.TxtInfo1.Text = "• This process may take 30-90 minutes depending on updates";
+                    freshSetupPage.TxtInfo2.Text = "• MUST run as Administrator";
+                    freshSetupPage.TxtInfo3.Text = "• Keep computer powered on and connected to internet";
+                    freshSetupPage.TxtInfo4.Text = "• System may restart automatically multiple times";
+
+                    if (freshSetupPage.BtnStep1.Visibility == System.Windows.Visibility.Visible)
+                        freshSetupPage.BtnStep1.Content = "Start";
+                    if (freshSetupPage.BtnStep2.Visibility == System.Windows.Visibility.Visible)
+                        freshSetupPage.BtnStep2.Content = "Start";
+                    if (freshSetupPage.BtnStep3.Visibility == System.Windows.Visibility.Visible)
+                        freshSetupPage.BtnStep3.Content = "Start";
+                }
             }
         }
 
