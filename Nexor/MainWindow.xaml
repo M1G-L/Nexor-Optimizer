@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Nexor" Height="700" Width="1100"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
-        ResizeMode="CanResize">
+        ResizeMode="CanResize" Icon="nexor.ico">
 
     <Window.Resources>
         <!-- Color Palette inspired by AtlasOS -->
@@ -153,7 +153,35 @@
                                 Padding="{TemplateBinding Padding}"
                                 BorderBrush="#1A1F2E"
                                 BorderThickness="0">
-                            <ContentPresenter/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1A1F2E"/>
+                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Window Control Button Style -->
+        <Style x:Key="WindowControlButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#9CA3AF"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="46"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -167,7 +195,7 @@
         </Style>
 
         <!-- Close Button Style -->
-        <Style x:Key="CloseButton" TargetType="Button" BasedOn="{StaticResource MenuButton}">
+        <Style x:Key="CloseButton" TargetType="Button" BasedOn="{StaticResource WindowControlButton}">
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="#EF4444"/>
@@ -270,15 +298,11 @@
 
                     <!-- Logo and Title -->
                     <StackPanel Orientation="Horizontal" Margin="20,0" VerticalAlignment="Center">
-                        <Border Background="#1990FE" Width="32" Height="32" CornerRadius="8" Margin="0,0,12,0">
-                            <Border.Effect>
+                        <Image Source="nexor.ico" Width="32" Height="32" Margin="0,0,12,0" RenderOptions.BitmapScalingMode="HighQuality">
+                            <Image.Effect>
                                 <DropShadowEffect Color="#1990FE" BlurRadius="12" ShadowDepth="0" Opacity="0.4"/>
-                            </Border.Effect>
-                            <TextBlock Text="N" FontSize="18" FontWeight="Bold" 
-                                       Foreground="White" 
-                                       HorizontalAlignment="Center" 
-                                       VerticalAlignment="Center"/>
-                        </Border>
+                            </Image.Effect>
+                        </Image>
                         <TextBlock Text="Nexor" FontSize="15" FontWeight="SemiBold" 
                                    Foreground="{StaticResource TextPrimary}" 
                                    VerticalAlignment="Center"
@@ -286,16 +310,13 @@
                     </StackPanel>
 
                     <!-- Window Controls -->
-                    <StackPanel Grid.Column="2" Orientation="Horizontal">
-                        <Button Content="─" Style="{StaticResource MenuButton}" 
-                                Click="MinimizeButton_Click" Width="46" 
-                                FontSize="16" Padding="0"/>
-                        <Button Content="□" Style="{StaticResource MenuButton}" 
-                                Click="MaximizeButton_Click" Width="46" 
-                                FontSize="14" Padding="0"/>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="0,0,12,0">
+                        <Button Content="─" Style="{StaticResource WindowControlButton}" 
+                                Click="MinimizeButton_Click" Margin="4,0"/>
+                        <Button Content="□" Style="{StaticResource WindowControlButton}" 
+                                Click="MaximizeButton_Click" Margin="4,0"/>
                         <Button Content="✕" Style="{StaticResource CloseButton}" 
-                                Click="CloseButton_Click" Width="46" 
-                                FontSize="16" Padding="0"/>
+                                Click="CloseButton_Click" Margin="4,0"/>
                     </StackPanel>
                 </Grid>
             </Border>
