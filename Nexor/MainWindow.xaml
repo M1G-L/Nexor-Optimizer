@@ -505,7 +505,7 @@
                                            Margin="0,8,0,0"/>
                             </StackPanel>
 
-                            <!-- System Health Card -->
+                            <!-- System Overview Card -->
                             <Border Background="{StaticResource CardBg}" 
                                     CornerRadius="16" 
                                     Padding="26" 
@@ -533,12 +533,12 @@
 
                                     <StackPanel Grid.Row="0">
                                         <TextBlock x:Name="TxtSystemHealth" 
-                                                   Text="System Health" 
+                                                   Text="System Overview" 
                                                    FontSize="20" 
                                                    FontWeight="Bold" 
                                                    Foreground="{StaticResource TextPrimary}"/>
                                         <TextBlock x:Name="TxtSystemHealthDesc" 
-                                                   Text="Your PC is in excellent condition" 
+                                                   Text="Real-time monitoring of your system" 
                                                    FontSize="13" 
                                                    Foreground="{StaticResource TextSecondary}" 
                                                    Margin="0,6,0,0"/>
@@ -551,7 +551,7 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <!-- CPU Card -->
+                                        <!-- CPU Usage Card -->
                                         <Border Grid.Column="0" 
                                                 CornerRadius="12" 
                                                 Padding="18" 
@@ -567,41 +567,43 @@
                                             <Grid>
                                                 <Grid.RowDefinitions>
                                                     <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
                                                     <RowDefinition Height="*"/>
                                                 </Grid.RowDefinitions>
 
                                                 <TextBlock Grid.Row="0" 
-                                                           Text="CPU" 
+                                                           Text="CPU USAGE" 
                                                            FontSize="10" 
                                                            Foreground="#B39CA3AF" 
-                                                           Margin="0,0,0,12" 
+                                                           Margin="0,0,0,8" 
                                                            FontWeight="SemiBold"/>
 
-                                                <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom">
-                                                    <Border Background="Transparent" CornerRadius="8" 
-                                                            Padding="8" 
-                                                            Margin="0,0,10,0">
-                                                        <TextBlock Text="⚡" 
-                                                                   FontSize="20" 
-                                                                   VerticalAlignment="Center" 
-                                                                   Foreground="#1990FE"/>
-                                                    </Border>
-                                                    <TextBlock x:Name="TxtCPUStatus" 
-                                                               Text="Normal" 
-                                                               FontSize="17" 
-                                                               Foreground="#FFFFFF" 
-                                                               FontWeight="Bold" 
-                                                               VerticalAlignment="Center"/>
-                                                </StackPanel>
+                                                <TextBlock Grid.Row="1" 
+                                                           x:Name="TxtCPUUsage"
+                                                           Text="0%" 
+                                                           FontSize="28" 
+                                                           Foreground="#1990FE" 
+                                                           FontWeight="Black"
+                                                           Margin="0,0,0,8"/>
+
+                                                <ProgressBar Grid.Row="2" 
+                                                            x:Name="CpuProgressBar"
+                                                            Height="6" 
+                                                            Value="0"
+                                                            Maximum="100"
+                                                            Background="#1A1F2E" 
+                                                            Foreground="#1990FE"
+                                                            VerticalAlignment="Bottom"
+                                                            Style="{StaticResource RoundedProgressBar}"/>
                                             </Grid>
                                         </Border>
 
-                                        <!-- RAM Card -->
+                                        <!-- RAM Usage Card -->
                                         <Border Grid.Column="1" 
                                                 CornerRadius="12" 
                                                 Padding="18" 
                                                 Margin="4,0"
-                                                BorderBrush="#1990FE"
+                                                BorderBrush="#10B981"
                                                 BorderThickness="1">
                                             <Border.Background>
                                                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -611,6 +613,7 @@
                                             </Border.Background>
                                             <Grid>
                                                 <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
                                                     <RowDefinition Height="Auto"/>
                                                     <RowDefinition Height="*"/>
                                                 </Grid.RowDefinitions>
@@ -619,35 +622,47 @@
                                                            Text="MEMORY" 
                                                            FontSize="10" 
                                                            Foreground="#B39CA3AF" 
-                                                           Margin="0,0,0,12" 
+                                                           Margin="0,0,0,8" 
                                                            FontWeight="SemiBold"/>
 
-                                                <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom">
-                                                    <Border Background="Transparent" 
-                                                            CornerRadius="8" 
-                                                            Padding="8" 
-                                                            Margin="0,0,10,0">
-                                                        <TextBlock Text="💾" 
-                                                                   FontSize="20" 
-                                                                   VerticalAlignment="Center" 
-                                                                   Foreground="#1990FE"/>
-                                                    </Border>
-                                                    <TextBlock x:Name="TxtRAMStatus" 
-                                                               Text="Good" 
-                                                               FontSize="17" 
-                                                               Foreground="#FFFFFF" 
-                                                               FontWeight="Bold" 
+                                                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+                                                    <TextBlock x:Name="TxtRAMUsed"
+                                                               Text="0" 
+                                                               FontSize="28" 
+                                                               Foreground="#10B981" 
+                                                               FontWeight="Black"/>
+                                                    <TextBlock Text=" / " 
+                                                               FontSize="16" 
+                                                               Foreground="#4D9CA3AF" 
+                                                               FontWeight="Bold"
+                                                               VerticalAlignment="Center"
+                                                               Margin="2,0"/>
+                                                    <TextBlock x:Name="TxtRAMTotal"
+                                                               Text="16 GB" 
+                                                               FontSize="16" 
+                                                               Foreground="#9CA3AF" 
+                                                               FontWeight="Medium"
                                                                VerticalAlignment="Center"/>
                                                 </StackPanel>
+
+                                                <ProgressBar Grid.Row="2" 
+                                                            x:Name="RamProgressBar"
+                                                            Height="6" 
+                                                            Value="0"
+                                                            Maximum="100"
+                                                            Background="#1A1F2E" 
+                                                            Foreground="#10B981"
+                                                            VerticalAlignment="Bottom"
+                                                            Style="{StaticResource RoundedProgressBar}"/>
                                             </Grid>
                                         </Border>
 
-                                        <!-- Performance Score Card -->
+                                        <!-- Disk Usage Card -->
                                         <Border Grid.Column="2" 
                                                 CornerRadius="12" 
                                                 Padding="18"
                                                 Margin="8,0,0,0"
-                                                BorderBrush="#1990FE"
+                                                BorderBrush="#8B5CF6"
                                                 BorderThickness="1">
                                             <Border.Background>
                                                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -658,31 +673,46 @@
                                             <Grid>
                                                 <Grid.RowDefinitions>
                                                     <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
                                                     <RowDefinition Height="*"/>
                                                 </Grid.RowDefinitions>
 
                                                 <TextBlock Grid.Row="0" 
-                                                           Text="PERFORMANCE" 
+                                                           Text="DISK SPACE" 
                                                            FontSize="10" 
                                                            Foreground="#B39CA3AF" 
-                                                           Margin="0,0,0,12" 
+                                                           Margin="0,0,0,8" 
                                                            FontWeight="SemiBold"/>
 
-                                                <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom">
-                                                    <TextBlock x:Name="TxtHealthScore" 
-                                                               Text="98" 
-                                                               FontSize="32" 
-                                                               Foreground="#FFFFFF" 
-                                                               FontWeight="Black" 
-                                                               VerticalAlignment="Center" 
-                                                               Margin="0,0,2,0"/>
-                                                    <TextBlock Text="%" 
+                                                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+                                                    <TextBlock x:Name="TxtDiskFree"
+                                                               Text="0" 
+                                                               FontSize="28" 
+                                                               Foreground="#8B5CF6" 
+                                                               FontWeight="Black"/>
+                                                    <TextBlock Text=" / " 
                                                                FontSize="16" 
-                                                               Foreground="#1990FE" 
-                                                               FontWeight="Bold" 
-                                                               VerticalAlignment="Center" 
-                                                               Margin="0,0,0,4"/>
+                                                               Foreground="#4D9CA3AF" 
+                                                               FontWeight="Bold"
+                                                               VerticalAlignment="Center"
+                                                               Margin="2,0"/>
+                                                    <TextBlock x:Name="TxtDiskTotal"
+                                                               Text="512 GB" 
+                                                               FontSize="16" 
+                                                               Foreground="#9CA3AF" 
+                                                               FontWeight="Medium"
+                                                               VerticalAlignment="Center"/>
                                                 </StackPanel>
+
+                                                <ProgressBar Grid.Row="2" 
+                                                            x:Name="DiskProgressBar"
+                                                            Height="6" 
+                                                            Value="0"
+                                                            Maximum="100"
+                                                            Background="#1A1F2E" 
+                                                            Foreground="#8B5CF6"
+                                                            VerticalAlignment="Bottom"
+                                                            Style="{StaticResource RoundedProgressBar}"/>
                                             </Grid>
                                         </Border>
                                     </Grid>

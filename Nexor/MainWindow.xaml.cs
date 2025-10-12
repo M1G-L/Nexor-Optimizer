@@ -8,12 +8,16 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 
 namespace Nexor
 {
     public partial class MainWindow : Window
     {
         private string _currentLanguage = "PT";
+        private DispatcherTimer _systemMonitorTimer;
+        private PerformanceCounter _cpuCounter;
+        private PerformanceCounter _ramCounter;
 
         [DllImport("kernel32.dll", EntryPoint = "SetProcessWorkingSetSize")]
         public static extern int SetProcessWorkingSetSize(IntPtr process, int minimumWorkingSetSize, int maximumWorkingSetSize);
@@ -26,6 +30,28 @@ namespace Nexor
         {
             InitializeComponent();
             LoadSystemInfo();
+            InitializeSystemMonitor();
+        }
+
+        private void InitializeSystemMonitor()
+        {
+            try
+            {
+                _cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+                _ramCounter = new PerformanceCounter("Memory", "Available MBytes");
+
+                // Initial read (first read is always 0)
+                _cpuCounter.NextValue();
+
+                _systemMonitorTimer = new DispatcherTimer();
+                _systemMonitorTimer.Interval = TimeSpan.FromSeconds(2);
+                _systemMonitorTimer.Tick += UpdateSystemMonitor;
+                _systemMonitorTimer.Start();
+
+                // Update immediately
+                UpdateSystemMonitor(null, null);
+            }
+            catch { }
         }
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -38,6 +64,74 @@ namespace Nexor
             {
                 DragMove();
             }
+        }
+
+        private void UpdateSystemMonitor(object sender, EventArgs e)
+        {
+            try
+            {
+                // CPU Usage
+                float cpuUsage = _cpuCounter.NextValue();
+                TxtCPUUsage.Text = $"{cpuUsage:F0}%";
+                CpuProgressBar.Value = cpuUsage;
+
+                // Update CPU color based on usage
+                var cpuColor = cpuUsage < 50 ? "#1990FE" : cpuUsage < 80 ? "#F59E0B" : "#EF4444";
+                TxtCPUUsage.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(cpuColor));
+                CpuProgressBar.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(cpuColor));
+
+                // RAM Usage
+                float availableRAM = _ramCounter.NextValue() / 1024f; // Convert to GB
+                int totalRAM = GetTotalRAM();
+                float usedRAM = totalRAM - availableRAM;
+                float ramPercentage = (usedRAM / totalRAM) * 100f;
+
+                TxtRAMUsed.Text = $"{usedRAM:F1}";
+                TxtRAMTotal.Text = $"{totalRAM} GB";
+                RamProgressBar.Value = ramPercentage;
+
+                // Update RAM color based on usage
+                var ramColor = ramPercentage < 70 ? "#10B981" : ramPercentage < 85 ? "#F59E0B" : "#EF4444";
+                TxtRAMUsed.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(ramColor));
+                RamProgressBar.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(ramColor));
+
+                // Disk Usage
+                DriveInfo[] drives = DriveInfo.GetDrives();
+                long totalSpace = 0;
+                long freeSpace = 0;
+
+                foreach (DriveInfo drive in drives)
+                {
+                    if (drive.IsReady && drive.DriveType == DriveType.Fixed)
+                    {
+                        totalSpace += drive.TotalSize;
+                        freeSpace += drive.AvailableFreeSpace;
+                    }
+                }
+
+                double totalGB = totalSpace / (1024.0 * 1024.0 * 1024.0);
+                double freeGB = freeSpace / (1024.0 * 1024.0 * 1024.0);
+                double usedGB = totalGB - freeGB;
+                double diskPercentage = (usedGB / totalGB) * 100.0;
+
+                TxtDiskFree.Text = $"{freeGB:F0}";
+                TxtDiskTotal.Text = $"{totalGB:F0} GB";
+                DiskProgressBar.Value = diskPercentage;
+
+                // Update Disk color based on usage
+                var diskColor = diskPercentage < 70 ? "#8B5CF6" : diskPercentage < 85 ? "#F59E0B" : "#EF4444";
+                TxtDiskFree.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(diskColor));
+                DiskProgressBar.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(diskColor));
+            }
+            catch { }
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+            _systemMonitorTimer?.Stop();
+            _cpuCounter?.Dispose();
+            _ramCounter?.Dispose();
         }
 
         private void MinimizeButton_Click(object sender, RoutedEventArgs e)
@@ -108,10 +202,8 @@ namespace Nexor
 
                 TxtWelcome.Text = "Bem-vindo ao Nexor";
                 TxtWelcomeSub.Text = "Otimize, limpe e acelere o seu PC";
-                TxtSystemHealth.Text = "Saúde do Sistema";
-                TxtSystemHealthDesc.Text = "O seu PC está em ótimo estado";
-                TxtCPUStatus.Text = "CPU: Normal";
-                TxtRAMStatus.Text = "RAM: Good";
+                TxtSystemHealth.Text = "Visão Geral do Sistema";
+                TxtSystemHealthDesc.Text = "Monitorização em tempo real do seu sistema";
 
                 TxtQuickActions.Text = "Ações Rápidas";
                 TxtCardCleanup.Text = "Limpeza";
@@ -142,10 +234,8 @@ namespace Nexor
 
                 TxtWelcome.Text = "Welcome to Nexor";
                 TxtWelcomeSub.Text = "Optimize, clean and speed up your PC";
-                TxtSystemHealth.Text = "System Health";
-                TxtSystemHealthDesc.Text = "Your PC is in excellent condition";
-                TxtCPUStatus.Text = "CPU: Normal";
-                TxtRAMStatus.Text = "RAM: Bom";
+                TxtSystemHealth.Text = "System Overview";
+                TxtSystemHealthDesc.Text = "Real-time monitoring of your system";
 
                 TxtQuickActions.Text = "Quick Actions";
                 TxtCardCleanup.Text = "Cleanup";
