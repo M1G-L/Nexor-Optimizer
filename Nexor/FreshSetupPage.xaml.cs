@@ -361,68 +361,111 @@ namespace Nexor
         private void CleanSoftwareDistribution()
         {
             string path = @"C:\Windows\SoftwareDistribution\Download";
-
             if (!Directory.Exists(path))
                 return;
 
             try
             {
                 // Stop Windows Update service
-                ProcessStartInfo stopService = new ProcessStartInfo
-                {
-                    FileName = "net.exe",
-                    Arguments = "stop wuauserv",
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true
-                };
+                StopWindowsUpdateService();
 
-                using (Process process = Process.Start(stopService))
-                {
-                    process.WaitForExit();
-                }
+                // Wait longer for service to fully stop and release file locks
+                System.Threading.Thread.Sleep(3000);
 
-                System.Threading.Thread.Sleep(2000);
-
-                // Delete all files in the folder
+                // Delete all files and subdirectories
                 DirectoryInfo di = new DirectoryInfo(path);
-                foreach (FileInfo file in di.EnumerateFiles())
+
+                foreach (FileInfo file in di.EnumerateFiles("*", SearchOption.AllDirectories))
                 {
                     try
                     {
+                        // Remove read-only attribute if present
+                        file.Attributes = FileAttributes.Normal;
                         file.Delete();
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to delete file {file.FullName}: {ex.Message}");
+                    }
                 }
 
-                // Delete all subdirectories
                 foreach (DirectoryInfo dir in di.EnumerateDirectories())
                 {
                     try
                     {
+                        // Remove read-only attributes recursively
+                        RemoveReadOnlyAttribute(dir);
                         dir.Delete(true);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to delete directory {dir.FullName}: {ex.Message}");
+                    }
                 }
 
                 System.Threading.Thread.Sleep(1000);
 
                 // Restart Windows Update service
-                ProcessStartInfo startService = new ProcessStartInfo
-                {
-                    FileName = "net.exe",
-                    Arguments = "start wuauserv",
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true
-                };
-
-                using (Process process = Process.Start(startService))
-                {
-                    process.WaitForExit();
-                }
+                StartWindowsUpdateService();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during cleanup: {ex.Message}");
+            }
+        }
+
+        private void StopWindowsUpdateService()
+        {
+            ProcessStartInfo stopService = new ProcessStartInfo
+            {
+                FileName = "net.exe",
+                Arguments = "stop wuauserv",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                Verb = "runas" // Ensure admin rights
+            };
+            using (Process process = Process.Start(stopService))
+            {
+                process?.WaitForExit();
+            }
+        }
+
+        private void StartWindowsUpdateService()
+        {
+            ProcessStartInfo startService = new ProcessStartInfo
+            {
+                FileName = "net.exe",
+                Arguments = "start wuauserv",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true
+            };
+            using (Process process = Process.Start(startService))
+            {
+                process?.WaitForExit();
+            }
+        }
+
+        private void RemoveReadOnlyAttribute(DirectoryInfo dir)
+        {
+            foreach (FileInfo file in dir.EnumerateFiles("*", SearchOption.AllDirectories))
+            {
+                try
+                {
+                    file.Attributes = FileAttributes.Normal;
+                }
+                catch { }
+            }
+
+            foreach (DirectoryInfo subDir in dir.EnumerateDirectories())
+            {
+                try
+                {
+                    subDir.Attributes = FileAttributes.Normal;
+                }
+                catch { }
+            }
         }
 
         private void BtnStep1_Click(object sender, RoutedEventArgs e) { }

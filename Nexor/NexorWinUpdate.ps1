@@ -709,17 +709,31 @@ Driver Rounds:            $($state.DriverRound)
 ================================================================================
 "@
 
-    $reportPath = $state.LogFile
-    try {
-        $reportContent | Out-File -FilePath $reportPath -Encoding UTF8 -Force
-        Write-Success "Report saved to: $reportPath"
-        Write-Log "Report saved: $reportPath" "Success"
-    } catch {
-        $reportPath = "$env:TEMP\Nexor_Report_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
-        $reportContent | Out-File -FilePath $reportPath -Encoding UTF8 -Force
-        Write-Warn "Report saved to temp: $reportPath"
-        Write-Log "Report saved to temp: $reportPath" "Warning"
-    }
+    # Ensure Desktop path exists and is accessible
+$desktopPath = [Environment]::GetFolderPath("Desktop")
+if (-not $desktopPath) {
+    $desktopPath = "$env:USERPROFILE\Desktop"
+}
+
+# Ensure the directory exists
+if (-not (Test-Path $desktopPath)) {
+    New-Item -Path $desktopPath -ItemType Directory -Force | Out-Null
+}
+
+$reportFileName = "Nexor_Report_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
+$reportPath = Join-Path $desktopPath $reportFileName
+
+try {
+    $reportContent | Out-File -FilePath $reportPath -Encoding UTF8 -Force
+    Write-Success "Report saved to Desktop: $reportFileName"
+    Write-Log "Report saved: $reportPath" "Success"
+} catch {
+    # Fallback to temp if desktop fails
+    $reportPath = "$env:TEMP\$reportFileName"
+    $reportContent | Out-File -FilePath $reportPath -Encoding UTF8 -Force
+    Write-Warn "Report saved to temp: $reportPath"
+    Write-Log "Report saved to temp: $reportPath" "Warning"
+}
     
     if (Test-RebootRequired) {
         Write-Host ""
@@ -838,14 +852,32 @@ try {
             $finalCheck = Get-WindowsUpdate -MicrosoftUpdate -ErrorAction SilentlyContinue
             
             if ($finalCheck -and $finalCheck.Count -gt 0) {
-                Write-Warn "$($finalCheck.Count) update(s) still available"
-                Write-Info "You may need to run Windows Update manually"
+                Write-Warn "$($finalCheck.Count) update(s) found after cleanup"
+                Write-Info "Installing remaining updates..."
                 Write-Host ""
                 
                 foreach ($update in $finalCheck) {
-                    Write-Info "[!] $($update.Title)"
+                    Write-Info "[+] $($update.Title)"
+                    $state.UpdateLog += $update.Title
                 }
                 Write-Log "Final check found updates: $($finalCheck.Count)" "Warning"
+                
+                Write-Host ""
+                Write-Step "Installing final updates..."
+                Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot -ErrorAction Stop | Out-Null
+                Write-Success "Final updates installed"
+                Write-Log "Final updates installed: $($finalCheck.Count)" "Success"
+                
+                Save-State $state
+                
+                Start-Sleep -Seconds 5
+                if (Test-RebootRequired) {
+                    Invoke-SystemReboot $state "Final Windows Updates"
+                }
+                
+                # Re-run verification after installing
+                & $PSCommandPath -Silent:$Silent
+                exit 0
             } else {
                 Write-Success "All updates verified and installed"
                 Write-Log "All updates verified" "Success"
