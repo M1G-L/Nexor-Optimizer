@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Nexor - Complete Windows 11 Fresh Setup Script (Fixed Update Detection)
+    Nexor - Complete Windows 11 Fresh Setup Script (Fixed Console Freezing)
 .DESCRIPTION
     Enhanced version with improved update detection and error handling:
     - Multiple update search methods with fallback
@@ -8,6 +8,7 @@
     - Forced Windows Update service reset
     - COM API integration for stubborn updates
     - Improved retry logic
+    - Quick Edit Mode disabled to prevent console freezing
 .NOTES
     Run from WPF app with admin privileges already granted
 #>
@@ -17,6 +18,40 @@ param(
 )
 
 $ErrorActionPreference = "Continue"
+
+# ============================================
+# DISABLE QUICK EDIT MODE (Prevent Console Freezing)
+# ============================================
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+public class ConsoleHelper {
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr GetStdHandle(int nStdHandle);
+    
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
+    
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
+    
+    public static void DisableQuickEdit() {
+        IntPtr consoleHandle = GetStdHandle(-10);
+        uint consoleMode;
+        if (GetConsoleMode(consoleHandle, out consoleMode)) {
+            consoleMode &= ~0x0040u; // Disable ENABLE_QUICK_EDIT_MODE
+            consoleMode |= 0x0080u;  // Enable ENABLE_EXTENDED_FLAGS
+            SetConsoleMode(consoleHandle, consoleMode);
+        }
+    }
+}
+"@
+
+try {
+    [ConsoleHelper]::DisableQuickEdit()
+} catch {
+    # Silently continue if Quick Edit disable fails
+}
 
 # ============================================
 # CONFIGURATION
@@ -251,6 +286,9 @@ function Initialize-Environment {
     if (-not (Test-Path $nexorDir)) {
         New-Item -Path $nexorDir -ItemType Directory -Force | Out-Null
     }
+    
+    Write-Success "Console Quick Edit Mode disabled (prevents freezing)"
+    Write-Log "Quick Edit Mode disabled successfully" "Info"
     
     Write-Step "Configuring NuGet provider..." -NoNewLine
     try {
