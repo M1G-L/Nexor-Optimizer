@@ -366,52 +366,56 @@ namespace Nexor
 
             try
             {
-                // Stop Windows Update service
+                // Stop Windows Update service to release file locks
                 StopWindowsUpdateService();
 
-                // Wait longer for service to fully stop and release file locks
-                System.Threading.Thread.Sleep(3000);
+                // Wait for service to fully stop and release all file locks
+                System.Threading.Thread.Sleep(5000);
 
-                // Delete all files and subdirectories
-                DirectoryInfo di = new DirectoryInfo(path);
-
-                foreach (FileInfo file in di.EnumerateFiles("*", SearchOption.AllDirectories))
+                // Use CMD to force delete the folder contents
+                ProcessStartInfo psi = new ProcessStartInfo
                 {
-                    try
-                    {
-                        // Remove read-only attribute if present
-                        file.Attributes = FileAttributes.Normal;
-                        file.Delete();
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Failed to delete file {file.FullName}: {ex.Message}");
-                    }
+                    FileName = "cmd.exe",
+                    Arguments = $"/c rd /s /q \"{path}\" && mkdir \"{path}\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    Verb = "runas" // Run as admin
+                };
+
+                using (Process process = Process.Start(psi))
+                {
+                    process?.WaitForExit();
                 }
 
-                foreach (DirectoryInfo dir in di.EnumerateDirectories())
-                {
-                    try
-                    {
-                        // Remove read-only attributes recursively
-                        RemoveReadOnlyAttribute(dir);
-                        dir.Delete(true);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Failed to delete directory {dir.FullName}: {ex.Message}");
-                    }
-                }
+                System.Threading.Thread.Sleep(2000);
 
-                System.Threading.Thread.Sleep(1000);
-
-                // Restart Windows Update service
-                StartWindowsUpdateService();
+                // Restart the computer (service will start automatically on boot)
+                RestartComputer();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error during cleanup: {ex.Message}");
+
+                // Try to restart service if cleanup failed
+                try
+                {
+                    StartWindowsUpdateService();
+                }
+                catch { }
             }
+        }
+
+        private void RestartComputer()
+        {
+            ProcessStartInfo psi = new ProcessStartInfo
+            {
+                FileName = "shutdown.exe",
+                Arguments = "/r /t 10 /c \"Restarting after Windows Update cleanup...\"",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            Process.Start(psi);
         }
 
         private void StopWindowsUpdateService()
