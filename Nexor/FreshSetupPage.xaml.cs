@@ -22,6 +22,179 @@ namespace Nexor
             SetLanguage(language);
         }
 
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            AnimatePageLoad();
+        }
+
+        private async void AnimatePageLoad()
+        {
+            // Animate header with slide down and fade
+            var headerStoryboard = new Storyboard();
+
+            var headerOpacity = new DoubleAnimation
+            {
+                From = 0,
+                To = 1,
+                Duration = TimeSpan.FromSeconds(0.6),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
+
+            var headerSlide = new DoubleAnimation
+            {
+                From = -50,
+                To = 0,
+                Duration = TimeSpan.FromSeconds(0.6),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
+
+            Storyboard.SetTarget(headerOpacity, HeaderSection);
+            Storyboard.SetTargetProperty(headerOpacity, new PropertyPath("Opacity"));
+            Storyboard.SetTarget(headerSlide, HeaderSection);
+            Storyboard.SetTargetProperty(headerSlide, new PropertyPath("(UIElement.RenderTransform).(TranslateTransform.Y)"));
+
+            headerStoryboard.Children.Add(headerOpacity);
+            headerStoryboard.Children.Add(headerSlide);
+            headerStoryboard.Begin();
+
+            await Task.Delay(200);
+
+            // Animate button with scale and fade
+            var btnStoryboard = new Storyboard();
+
+            var btnOpacity = new DoubleAnimation
+            {
+                From = 0,
+                To = 1,
+                Duration = TimeSpan.FromSeconds(0.5),
+                EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.3 }
+            };
+
+            var btnScaleX = new DoubleAnimation
+            {
+                From = 0.8,
+                To = 1,
+                Duration = TimeSpan.FromSeconds(0.5),
+                EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.3 }
+            };
+
+            var btnScaleY = new DoubleAnimation
+            {
+                From = 0.8,
+                To = 1,
+                Duration = TimeSpan.FromSeconds(0.5),
+                EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.3 }
+            };
+
+            Storyboard.SetTarget(btnOpacity, BtnRunAll);
+            Storyboard.SetTargetProperty(btnOpacity, new PropertyPath("Opacity"));
+            Storyboard.SetTarget(btnScaleX, BtnRunAll);
+            Storyboard.SetTargetProperty(btnScaleX, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleX)"));
+            Storyboard.SetTarget(btnScaleY, BtnRunAll);
+            Storyboard.SetTargetProperty(btnScaleY, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleY)"));
+
+            btnStoryboard.Children.Add(btnOpacity);
+            btnStoryboard.Children.Add(btnScaleX);
+            btnStoryboard.Children.Add(btnScaleY);
+            btnStoryboard.Begin();
+
+            await Task.Delay(150);
+
+            // Animate Step 1 Card
+            AnimateCardIn(Step1Card, 0);
+
+            await Task.Delay(150);
+
+            // Animate Step 2 Card
+            AnimateCardIn(Step2Card, 0);
+
+            await Task.Delay(150);
+
+            // Animate Step 3 Card
+            AnimateCardIn(Step3Card, 0);
+
+            await Task.Delay(150);
+
+            // Animate Info Card
+            AnimateCardIn(InfoCard, 30);
+
+            // Start subtle pulse on button
+            StartButtonPulse();
+        }
+
+        private void AnimateCardIn(FrameworkElement card, double translateYFrom)
+        {
+            var cardStoryboard = new Storyboard();
+
+            var cardOpacity = new DoubleAnimation
+            {
+                From = 0,
+                To = 1,
+                Duration = TimeSpan.FromSeconds(0.5),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
+
+            var cardSlide = new DoubleAnimation
+            {
+                From = translateYFrom == 0 ? -100 : translateYFrom,
+                To = 0,
+                Duration = TimeSpan.FromSeconds(0.5),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
+
+            Storyboard.SetTarget(cardOpacity, card);
+            Storyboard.SetTargetProperty(cardOpacity, new PropertyPath("Opacity"));
+            Storyboard.SetTarget(cardSlide, card);
+
+            if (translateYFrom == 0)
+            {
+                Storyboard.SetTargetProperty(cardSlide, new PropertyPath("(UIElement.RenderTransform).(TranslateTransform.X)"));
+            }
+            else
+            {
+                Storyboard.SetTargetProperty(cardSlide, new PropertyPath("(UIElement.RenderTransform).(TranslateTransform.Y)"));
+            }
+
+            cardStoryboard.Children.Add(cardOpacity);
+            cardStoryboard.Children.Add(cardSlide);
+            cardStoryboard.Begin();
+        }
+
+        private void StartButtonPulse()
+        {
+            var pulseStoryboard = new Storyboard
+            {
+                RepeatBehavior = RepeatBehavior.Forever
+            };
+
+            var pulseScaleX = new DoubleAnimation
+            {
+                From = 1,
+                To = 1.02,
+                Duration = TimeSpan.FromSeconds(2),
+                AutoReverse = true,
+                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
+            };
+
+            var pulseScaleY = new DoubleAnimation
+            {
+                From = 1,
+                To = 1.02,
+                Duration = TimeSpan.FromSeconds(2),
+                AutoReverse = true,
+                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
+            };
+
+            Storyboard.SetTarget(pulseScaleX, BtnRunAll);
+            Storyboard.SetTargetProperty(pulseScaleX, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleX)"));
+            Storyboard.SetTarget(pulseScaleY, BtnRunAll);
+            Storyboard.SetTargetProperty(pulseScaleY, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleY)"));
+
+            pulseStoryboard.Children.Add(pulseScaleX);
+            pulseStoryboard.Children.Add(pulseScaleY);
+            pulseStoryboard.Begin();
+        }
+
         private void SetLanguage(string language)
         {
             if (language == "PT")
@@ -93,21 +266,24 @@ namespace Nexor
         private void AnimateDialogIn()
         {
             // Fade in overlay
-            var fadeIn = new DoubleAnimation
+            var overlayFade = new DoubleAnimation
             {
                 From = 0,
                 To = 1,
                 Duration = TimeSpan.FromSeconds(0.3),
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
             };
+            DialogOverlay.BeginAnimation(OpacityProperty, overlayFade);
 
             // Scale and fade in dialog box
+            var dialogStoryboard = new Storyboard();
+
             var scaleX = new DoubleAnimation
             {
                 From = 0.7,
                 To = 1,
                 Duration = TimeSpan.FromSeconds(0.4),
-                EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.3 }
+                EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.5 }
             };
 
             var scaleY = new DoubleAnimation
@@ -115,30 +291,67 @@ namespace Nexor
                 From = 0.7,
                 To = 1,
                 Duration = TimeSpan.FromSeconds(0.4),
-                EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.3 }
+                EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.5 }
             };
 
-            var fadeInDialog = new DoubleAnimation
+            var fadeIn = new DoubleAnimation
             {
                 From = 0,
                 To = 1,
-                Duration = TimeSpan.FromSeconds(0.4)
+                Duration = TimeSpan.FromSeconds(0.3)
             };
 
-            DialogOverlay.BeginAnimation(OpacityProperty, fadeIn);
+            Storyboard.SetTarget(scaleX, DialogBox);
+            Storyboard.SetTargetProperty(scaleX, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleX)"));
+            Storyboard.SetTarget(scaleY, DialogBox);
+            Storyboard.SetTargetProperty(scaleY, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleY)"));
+            Storyboard.SetTarget(fadeIn, DialogBox);
+            Storyboard.SetTargetProperty(fadeIn, new PropertyPath("Opacity"));
 
-            var scaleTransform = new ScaleTransform(1, 1);
-            DialogBox.RenderTransform = scaleTransform;
-            DialogBox.RenderTransformOrigin = new Point(0.5, 0.5);
+            dialogStoryboard.Children.Add(scaleX);
+            dialogStoryboard.Children.Add(scaleY);
+            dialogStoryboard.Children.Add(fadeIn);
+            dialogStoryboard.Begin();
 
-            scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleX);
-            scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleY);
-            DialogBox.BeginAnimation(OpacityProperty, fadeInDialog);
+            // Animate dialog icon with pulse
+            AnimateDialogIcon();
+        }
+
+        private void AnimateDialogIcon()
+        {
+            var iconStoryboard = new Storyboard();
+
+            var iconScaleX = new DoubleAnimation
+            {
+                From = 0.5,
+                To = 1,
+                Duration = TimeSpan.FromSeconds(0.5),
+                EasingFunction = new ElasticEase { EasingMode = EasingMode.EaseOut, Oscillations = 2, Springiness = 5 }
+            };
+
+            var iconScaleY = new DoubleAnimation
+            {
+                From = 0.5,
+                To = 1,
+                Duration = TimeSpan.FromSeconds(0.5),
+                EasingFunction = new ElasticEase { EasingMode = EasingMode.EaseOut, Oscillations = 2, Springiness = 5 }
+            };
+
+            Storyboard.SetTarget(iconScaleX, DialogIconBorder);
+            Storyboard.SetTargetProperty(iconScaleX, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleX)"));
+            Storyboard.SetTarget(iconScaleY, DialogIconBorder);
+            Storyboard.SetTargetProperty(iconScaleY, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleY)"));
+
+            iconStoryboard.Children.Add(iconScaleX);
+            iconStoryboard.Children.Add(iconScaleY);
+            iconStoryboard.BeginTime = TimeSpan.FromSeconds(0.2);
+            iconStoryboard.Begin();
         }
 
         private void AnimateDialogOut(Action onComplete)
         {
-            // Scale and fade out dialog box
+            var dialogStoryboard = new Storyboard();
+
             var scaleX = new DoubleAnimation
             {
                 To = 0.7,
@@ -159,20 +372,130 @@ namespace Nexor
                 Duration = TimeSpan.FromSeconds(0.2)
             };
 
-            fadeOut.Completed += (s, e) =>
+            Storyboard.SetTarget(scaleX, DialogBox);
+            Storyboard.SetTargetProperty(scaleX, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleX)"));
+            Storyboard.SetTarget(scaleY, DialogBox);
+            Storyboard.SetTargetProperty(scaleY, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleY)"));
+            Storyboard.SetTarget(fadeOut, DialogOverlay);
+            Storyboard.SetTargetProperty(fadeOut, new PropertyPath("Opacity"));
+
+            dialogStoryboard.Children.Add(scaleX);
+            dialogStoryboard.Children.Add(scaleY);
+            dialogStoryboard.Children.Add(fadeOut);
+
+            dialogStoryboard.Completed += (s, e) =>
             {
                 DialogOverlay.Visibility = Visibility.Collapsed;
                 onComplete?.Invoke();
             };
 
-            var scaleTransform = DialogBox.RenderTransform as ScaleTransform;
-            if (scaleTransform != null)
-            {
-                scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleX);
-                scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleY);
-            }
+            dialogStoryboard.Begin();
+        }
 
-            DialogOverlay.BeginAnimation(OpacityProperty, fadeOut);
+        private void ShowNotification(string title, string message, string icon, SolidColorBrush accentColor)
+        {
+            NotificationTitle.Text = title;
+            NotificationMessage.Text = message;
+            NotificationIcon.Text = icon;
+            NotificationBorder.BorderBrush = accentColor;
+
+            // Update gradient background
+            var gradient = new LinearGradientBrush();
+            gradient.StartPoint = new Point(0, 0);
+            gradient.EndPoint = new Point(1, 1);
+            gradient.GradientStops.Add(new GradientStop(Color.FromArgb(0x1A, accentColor.Color.R, accentColor.Color.G, accentColor.Color.B), 0));
+            gradient.GradientStops.Add(new GradientStop(Color.FromArgb(0x0D, accentColor.Color.R, accentColor.Color.G, accentColor.Color.B), 1));
+            NotificationBorder.Background = gradient;
+
+            NotificationPanel.Visibility = Visibility.Visible;
+
+            // Slide in animation
+            var slideStoryboard = new Storyboard();
+
+            var slideX = new DoubleAnimation
+            {
+                From = 500,
+                To = 0,
+                Duration = TimeSpan.FromSeconds(0.4),
+                EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.4 }
+            };
+
+            var fadeIn = new DoubleAnimation
+            {
+                From = 0,
+                To = 1,
+                Duration = TimeSpan.FromSeconds(0.4)
+            };
+
+            Storyboard.SetTarget(slideX, NotificationPanel);
+            Storyboard.SetTargetProperty(slideX, new PropertyPath("(UIElement.RenderTransform).(TranslateTransform.X)"));
+            Storyboard.SetTarget(fadeIn, NotificationPanel);
+            Storyboard.SetTargetProperty(fadeIn, new PropertyPath("Opacity"));
+
+            slideStoryboard.Children.Add(slideX);
+            slideStoryboard.Children.Add(fadeIn);
+            slideStoryboard.Begin();
+
+            // Icon bounce
+            var iconBounce = new Storyboard();
+            var bounceScale = new DoubleAnimation
+            {
+                From = 0.5,
+                To = 1,
+                Duration = TimeSpan.FromSeconds(0.6),
+                EasingFunction = new BounceEase { EasingMode = EasingMode.EaseOut, Bounces = 2, Bounciness = 3 }
+            };
+
+            Storyboard.SetTarget(bounceScale, NotificationBorder);
+            Storyboard.SetTargetProperty(bounceScale, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleX)"));
+            iconBounce.Children.Add(bounceScale);
+
+            var bounceScaleY = bounceScale.Clone();
+            Storyboard.SetTarget(bounceScaleY, NotificationBorder);
+            Storyboard.SetTargetProperty(bounceScaleY, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleY)"));
+            iconBounce.Children.Add(bounceScaleY);
+
+            iconBounce.BeginTime = TimeSpan.FromSeconds(0.2);
+            iconBounce.Begin();
+
+            // Auto hide after 4 seconds
+            var hideTimer = new System.Windows.Threading.DispatcherTimer();
+            hideTimer.Interval = TimeSpan.FromSeconds(4);
+            hideTimer.Tick += (s, e) =>
+            {
+                HideNotification();
+                hideTimer.Stop();
+            };
+            hideTimer.Start();
+        }
+
+        private void HideNotification()
+        {
+            var slideOut = new Storyboard();
+
+            var slideX = new DoubleAnimation
+            {
+                To = 500,
+                Duration = TimeSpan.FromSeconds(0.3),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
+            };
+
+            var fadeOut = new DoubleAnimation
+            {
+                To = 0,
+                Duration = TimeSpan.FromSeconds(0.3)
+            };
+
+            Storyboard.SetTarget(slideX, NotificationPanel);
+            Storyboard.SetTargetProperty(slideX, new PropertyPath("(UIElement.RenderTransform).(TranslateTransform.X)"));
+            Storyboard.SetTarget(fadeOut, NotificationPanel);
+            Storyboard.SetTargetProperty(fadeOut, new PropertyPath("Opacity"));
+
+            slideOut.Children.Add(slideX);
+            slideOut.Children.Add(fadeOut);
+
+            slideOut.Completed += (s, e) => NotificationPanel.Visibility = Visibility.Collapsed;
+            slideOut.Begin();
         }
 
         private void DialogBtnYes_Click(object sender, RoutedEventArgs e)
@@ -201,7 +524,6 @@ namespace Nexor
                 {
                     string scriptPath = Path.Combine(Path.GetTempPath(), "NexorWinUpdate.ps1");
 
-                    // Extract script from embedded resources or physical file
                     if (!ExtractScript(scriptPath))
                     {
                         Dispatcher.Invoke(async () =>
@@ -218,7 +540,6 @@ namespace Nexor
                         return;
                     }
 
-                    // Run the PowerShell script
                     RunPowerShellScript(scriptPath);
                 }
                 catch (Exception ex)
@@ -260,7 +581,6 @@ namespace Nexor
                     }
                 }
 
-                // Fallback: look for physical file
                 string appDir = AppDomain.CurrentDomain.BaseDirectory;
                 string physicalScriptPath = Path.Combine(appDir, "NexorWinUpdate.ps1");
 
@@ -307,7 +627,6 @@ namespace Nexor
 
                     int exitCode = process.ExitCode;
 
-                    // Clean up SoftwareDistribution folder
                     try
                     {
                         CleanSoftwareDistribution();
@@ -316,15 +635,13 @@ namespace Nexor
 
                     if (exitCode == 0)
                     {
-                        Dispatcher.Invoke(async () =>
+                        Dispatcher.Invoke(() =>
                         {
-                            await ShowModernDialog(
-                                _currentLanguage == "PT" ? "Sucesso" : "Success",
-                                _currentLanguage == "PT"
-                                    ? "Atualização concluída com sucesso!"
-                                    : "Update completed successfully!",
+                            ShowNotification(
+                                _currentLanguage == "PT" ? "Sucesso!" : "Success!",
+                                _currentLanguage == "PT" ? "Atualização concluída!" : "Update completed!",
                                 "✅",
-                                DialogType.OK
+                                (SolidColorBrush)FindResource("AccentGreen")
                             );
                         });
                     }
@@ -366,20 +683,16 @@ namespace Nexor
 
             try
             {
-                // Stop Windows Update service to release file locks
                 StopWindowsUpdateService();
-
-                // Wait for service to fully stop and release all file locks
                 System.Threading.Thread.Sleep(5000);
 
-                // Use CMD to force delete the folder contents
                 ProcessStartInfo psi = new ProcessStartInfo
                 {
                     FileName = "cmd.exe",
                     Arguments = $"/c rd /s /q \"{path}\" && mkdir \"{path}\"",
                     UseShellExecute = false,
                     CreateNoWindow = true,
-                    Verb = "runas" // Run as admin
+                    Verb = "runas"
                 };
 
                 using (Process process = Process.Start(psi))
@@ -388,15 +701,11 @@ namespace Nexor
                 }
 
                 System.Threading.Thread.Sleep(2000);
-
-                // Restart the computer (service will start automatically on boot)
                 RestartComputer();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error during cleanup: {ex.Message}");
-
-                // Try to restart service if cleanup failed
                 try
                 {
                     StartWindowsUpdateService();
@@ -414,7 +723,6 @@ namespace Nexor
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
-
             Process.Start(psi);
         }
 
@@ -427,7 +735,7 @@ namespace Nexor
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
-                Verb = "runas" // Ensure admin rights
+                Verb = "runas"
             };
             using (Process process = Process.Start(stopService))
             {
