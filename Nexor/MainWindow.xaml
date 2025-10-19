@@ -559,7 +559,7 @@
                     <ScrollViewer x:Name="DashboardContent" VerticalScrollBarVisibility="Auto" Padding="0,0,6,0">
                         <StackPanel Margin="30,25,30,30">
                             <!-- Welcome -->
-                            <StackPanel x:Name="WelcomeSection" Margin="0,0,0,25" Opacity="0">
+                            <StackPanel x:Name="WelcomeSection" Margin="0,20,0,15" Opacity="0">
                                 <StackPanel.RenderTransform>
                                     <TransformGroup>
                                         <ScaleTransform/>
@@ -573,7 +573,7 @@
                             </StackPanel>
 
                             <!-- System Overview -->
-                            <Border x:Name="SystemOverviewCard" Background="{StaticResource CardBg}" CornerRadius="16" Padding="26" Margin="0,0,0,20" BorderBrush="#1A1F2E" BorderThickness="1" Opacity="0">
+                            <Border x:Name="SystemOverviewCard" Background="{StaticResource CardBg}" CornerRadius="16" Padding="26" Margin="0,0,0,8" BorderBrush="#1A1F2E" BorderThickness="1" Opacity="0">
                                 <Border.RenderTransform>
                                     <TransformGroup>
                                         <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
@@ -649,7 +649,7 @@
                             <!-- Quick Actions -->
                             <TextBlock x:Name="TxtQuickActions" Text="Quick Actions" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Margin="0,5,0,18"/>
 
-                            <UniformGrid x:Name="QuickActionsGrid" Rows="2" Columns="3" Margin="0,0,0,20">
+                            <UniformGrid x:Name="QuickActionsGrid" Rows="2" Columns="3" Margin="0,-8,0,20">
                                 <!-- Card 1 -->
                                 <Border x:Name="Card1" Style="{StaticResource ActionCard}" Margin="0,0,8,8" MouseLeftButtonDown="CardCleanup_Click" Opacity="0">
                                     <Border.RenderTransform>
@@ -802,9 +802,9 @@
                             </UniformGrid>
 
                             <!-- System Info -->
-                            <TextBlock x:Name="TxtSystemInfo" Text="System Information" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Margin="0,10,0,20"/>
+                            <TextBlock x:Name="TxtSystemInfo" Text="System Information" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Margin="0,35,0,5"/>
 
-                            <UniformGrid x:Name="SystemInfoCards" Rows="1" Columns="2" Opacity="0">
+                            <UniformGrid x:Name="SystemInfoCards" Rows="1" Columns="2" Opacity="0" Height="200">
                                 <UniformGrid.RenderTransform>
                                     <TransformGroup>
                                         <ScaleTransform/>
@@ -815,7 +815,7 @@
                                 </UniformGrid.RenderTransform>
 
                                 <!-- Left Card -->
-                                <Border Background="{StaticResource CardBg}" CornerRadius="16" Padding="24" Margin="0,0,8,0" BorderBrush="#1A1F2E" BorderThickness="1">
+                                <Border Background="{StaticResource CardBg}" CornerRadius="16" Padding="16" Margin="0,0,8,0" BorderBrush="#1A1F2E" BorderThickness="1">
                                     <Border.Effect>
                                         <DropShadowEffect Color="#000000" BlurRadius="15" ShadowDepth="0" Opacity="0.2"/>
                                     </Border.Effect>
@@ -836,7 +836,7 @@
                                 </Border>
 
                                 <!-- Right Card -->
-                                <Border Background="{StaticResource CardBg}" CornerRadius="16" Padding="24" Margin="8,0,0,0" BorderBrush="#1A1F2E" BorderThickness="1">
+                                <Border Background="{StaticResource CardBg}" CornerRadius="16" Padding="16" Margin="8,0,0,0" BorderBrush="#1A1F2E" BorderThickness="1">
                                     <Border.Effect>
                                         <DropShadowEffect Color="#000000" BlurRadius="15" ShadowDepth="0" Opacity="0.2"/>
                                     </Border.Effect>
