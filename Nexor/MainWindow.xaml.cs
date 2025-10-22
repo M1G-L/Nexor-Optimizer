@@ -5,6 +5,7 @@ using System.Management;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -93,6 +94,13 @@ namespace Nexor
 
                 await Task.Delay(150);
 
+                if (TxtQuickActions != null)
+                {
+                    AnimateElement(TxtQuickActions, 0, 1, -20, 0, 0.5, false);
+                }
+
+                await Task.Delay(100);
+
                 AnimateQuickActionsIn();
 
                 await Task.Delay(800);
@@ -105,6 +113,20 @@ namespace Nexor
             catch (Exception ex)
             {
                 Debug.WriteLine($"Page load animation error: {ex.Message}");
+            }
+        }
+        private void SetSelectedMenuItem(Button selectedButton)
+        {
+            // Reset all menu buttons
+            BtnDashboard.Tag = "Normal";
+            BtnProcesses.Tag = "Normal";
+            BtnCleanup.Tag = "Normal";
+            BtnFreshSetup.Tag = "Normal";
+
+            // Set selected button
+            if (selectedButton != null)
+            {
+                selectedButton.Tag = "Selected";
             }
         }
 
@@ -544,6 +566,7 @@ namespace Nexor
 
         private void BtnDashboard_Click(object sender, RoutedEventArgs e)
         {
+            SetSelectedMenuItem(BtnDashboard);
             if (DashboardContent != null)
             {
                 DashboardContent.Visibility = Visibility.Visible;
@@ -558,6 +581,7 @@ namespace Nexor
         {
             try
             {
+                SetSelectedMenuItem(BtnFreshSetup);
                 var freshSetupPage = new FreshSetupPage(_currentLanguage);
                 if (MainContentFrame != null)
                 {
@@ -580,6 +604,7 @@ namespace Nexor
         {
             try
             {
+                SetSelectedMenuItem(BtnProcesses);
                 var processesPage = new ProcessesPage(_currentLanguage);
                 if (MainContentFrame != null)
                 {
@@ -888,6 +913,7 @@ namespace Nexor
         {
             try
             {
+                SetSelectedMenuItem(BtnCleanup);
                 var cleanupPage = new CleanupPage(_currentLanguage);
                 if (MainContentFrame != null)
                 {
