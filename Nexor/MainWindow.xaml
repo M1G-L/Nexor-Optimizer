@@ -507,7 +507,7 @@
                                 </StackPanel>
                             </Button>
 
-                            <Button Style="{StaticResource MenuButton}" Margin="0,0,0,4">
+                            <Button x:Name="BtnPerformance" Style="{StaticResource MenuButton}" Margin="0,0,0,4" Click="BtnPerformance_Click">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="⚡" FontSize="16" Margin="0,0,10,0"/>
                                     <TextBlock x:Name="TxtPerformance" Text="Performance"/>

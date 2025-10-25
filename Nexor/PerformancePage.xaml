@@ -1,0 +1,768 @@
+﻿<Page x:Class="Nexor.PerformancePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Background="Transparent"
+      Loaded="Page_Loaded">
+
+    <Page.Resources>
+        <!-- Color Palette -->
+        <SolidColorBrush x:Key="PrimaryBg" Color="#010515"/>
+        <SolidColorBrush x:Key="SecondaryBg" Color="#0A0F1E"/>
+        <SolidColorBrush x:Key="CardBg" Color="#0F1419"/>
+        <SolidColorBrush x:Key="AccentBlue" Color="#1990FE"/>
+        <SolidColorBrush x:Key="AccentGreen" Color="#10B981"/>
+        <SolidColorBrush x:Key="AccentOrange" Color="#F59E0B"/>
+        <SolidColorBrush x:Key="AccentRed" Color="#EF4444"/>
+        <SolidColorBrush x:Key="AccentPurple" Color="#8B5CF6"/>
+        <SolidColorBrush x:Key="AccentYellow" Color="#FCD34D"/>
+        <SolidColorBrush x:Key="TextPrimary" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#9CA3AF"/>
+
+        <!-- Performance Card Style -->
+        <Style x:Key="PerformanceCard" TargetType="Border">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#12141A" Offset="0"/>
+                        <GradientStop Color="#0A0D12" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#1A1F2E"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Padding" Value="24"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#000000" BlurRadius="15" ShadowDepth="0" Opacity="0.3"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Toggle Switch Style -->
+        <Style x:Key="ToggleSwitch" TargetType="CheckBox">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Grid>
+                            <Border x:Name="SwitchBackground" Width="48" Height="26" CornerRadius="13" 
+                                    Background="#1A1F2E" BorderBrush="#374151" BorderThickness="1">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="#000000" BlurRadius="4" ShadowDepth="0" Opacity="0.3"/>
+                                </Border.Effect>
+                            </Border>
+                            <Ellipse x:Name="SwitchThumb" Width="18" Height="18" Fill="#6B7280" 
+                                     HorizontalAlignment="Left" Margin="4,0,0,0">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="#000000" BlurRadius="3" ShadowDepth="1" Opacity="0.4"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimation Storyboard.TargetName="SwitchBackground" 
+                                                          Storyboard.TargetProperty="Background.Color" 
+                                                          To="#1990FE" Duration="0:0:0.3">
+                                                <ColorAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </ColorAnimation.EasingFunction>
+                                            </ColorAnimation>
+                                            <ThicknessAnimation Storyboard.TargetName="SwitchThumb" 
+                                                              Storyboard.TargetProperty="Margin" 
+                                                              To="26,0,0,0" Duration="0:0:0.3">
+                                                <ThicknessAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </ThicknessAnimation.EasingFunction>
+                                            </ThicknessAnimation>
+                                            <ColorAnimation Storyboard.TargetName="SwitchThumb" 
+                                                          Storyboard.TargetProperty="Fill.Color" 
+                                                          To="#FFFFFF" Duration="0:0:0.3">
+                                                <ColorAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </ColorAnimation.EasingFunction>
+                                            </ColorAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimation Storyboard.TargetName="SwitchBackground" 
+                                                          Storyboard.TargetProperty="Background.Color" 
+                                                          To="#1A1F2E" Duration="0:0:0.3">
+                                                <ColorAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </ColorAnimation.EasingFunction>
+                                            </ColorAnimation>
+                                            <ThicknessAnimation Storyboard.TargetName="SwitchThumb" 
+                                                              Storyboard.TargetProperty="Margin" 
+                                                              To="4,0,0,0" Duration="0:0:0.3">
+                                                <ThicknessAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </ThicknessAnimation.EasingFunction>
+                                            </ThicknessAnimation>
+                                            <ColorAnimation Storyboard.TargetName="SwitchThumb" 
+                                                          Storyboard.TargetProperty="Fill.Color" 
+                                                          To="#6B7280" Duration="0:0:0.3">
+                                                <ColorAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </ColorAnimation.EasingFunction>
+                                            </ColorAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Action Button Style -->
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#1990FE" Offset="0"/>
+                        <GradientStop Color="#1565C0" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="20,12"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX="1" ScaleY="1"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#1990FE" BlurRadius="12" ShadowDepth="0" Opacity="0.3"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Trigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" 
+                                               To="1.05" Duration="0:0:0.2">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" 
+                                               To="1.05" Duration="0:0:0.2">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.EnterActions>
+                    <Trigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" 
+                                               To="1" Duration="0:0:0.2">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" 
+                                               To="1" Duration="0:0:0.2">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.ExitActions>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Secondary Button Style -->
+        <Style x:Key="SecondaryButton" TargetType="Button" BasedOn="{StaticResource ActionButton}">
+            <Setter Property="Background" Value="#1A1F2E"/>
+            <Setter Property="Foreground" Value="#9CA3AF"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="10" Padding="{TemplateBinding Padding}" 
+                                BorderBrush="#374151" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,6,0">
+        <StackPanel Margin="30,25,30,30">
+            <!-- Header -->
+            <StackPanel x:Name="HeaderSection" Margin="0,0,0,30" Opacity="0">
+                <StackPanel.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform/>
+                        <SkewTransform/>
+                        <RotateTransform/>
+                        <TranslateTransform Y="-30"/>
+                    </TransformGroup>
+                </StackPanel.RenderTransform>
+                <TextBlock x:Name="TxtTitle" Text="Performance Tweaks" FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+                <TextBlock x:Name="TxtSubtitle" Text="Optimize your system for maximum performance" FontSize="14" Foreground="{StaticResource TextSecondary}" Margin="0,6,0,0"/>
+            </StackPanel>
+
+            <!-- Quick Actions -->
+            <Border x:Name="QuickActionsCard" Style="{StaticResource PerformanceCard}" Margin="0,0,0,24" Opacity="0">
+                <Border.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
+                        <SkewTransform/>
+                        <RotateTransform/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </Border.RenderTransform>
+                <StackPanel>
+                    <TextBlock x:Name="TxtQuickActions" Text="⚡ Quick Actions" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Margin="0,0,0,20"/>
+
+                    <UniformGrid Rows="1" Columns="3">
+                        <Button x:Name="BtnOptimizeAll" Style="{StaticResource ActionButton}" Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🚀" FontSize="20" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="TxtOptimizeAll" Text="Optimize All"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="BtnClearRAM" Style="{StaticResource SecondaryButton}" Margin="4,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="💾" FontSize="20" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="TxtClearRAM" Text="Clear RAM"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="BtnResetTweaks" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔄" FontSize="20" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="TxtResetTweaks" Text="Reset All"/>
+                            </StackPanel>
+                        </Button>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- System Tweaks -->
+            <Border x:Name="SystemTweaksCard" Style="{StaticResource PerformanceCard}" Margin="0,0,0,24" Opacity="0">
+                <Border.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
+                        <SkewTransform/>
+                        <RotateTransform/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </Border.RenderTransform>
+                <StackPanel>
+                    <TextBlock x:Name="TxtSystemTweaks" Text="🔧 System Tweaks" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Margin="0,0,0,20"/>
+
+                    <!-- Tweak Item -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtGameMode" Text="Game Mode" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtGameModeDesc" Text="Optimize system for gaming performance" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkGameMode" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="#1A1F2E" Margin="0,0,0,20"/>
+
+                    <!-- High Performance Power Plan -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtPowerPlan" Text="High Performance Power Plan" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtPowerPlanDesc" Text="Maximum CPU performance, higher power consumption" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkPowerPlan" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="#1A1F2E" Margin="0,0,0,20"/>
+
+                    <!-- Ultimate Performance -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="TxtUltimatePower" Text="Ultimate Performance Mode" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                <Border Background="{StaticResource AccentPurple}" CornerRadius="4" Padding="6,2" Margin="10,0,0,0">
+                                    <TextBlock x:Name="TxtPro" Text="PRO" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                                </Border>
+                            </StackPanel>
+                            <TextBlock x:Name="TxtUltimatePowerDesc" Text="Microsoft's hidden power plan for maximum performance" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkUltimatePower" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="#1A1F2E" Margin="0,0,0,20"/>
+
+                    <!-- Disable Hibernation -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtHibernation" Text="Disable Hibernation" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtHibernationDesc" Text="Free up GB of disk space, faster boot times" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkHibernation" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="#1A1F2E" Margin="0,0,0,20"/>
+
+                    <!-- Fast Startup -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtFastStartup" Text="Disable Fast Startup" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtFastStartupDesc" Text="Prevent system issues, cleaner boots" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkFastStartup" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Visual Effects -->
+            <Border x:Name="VisualEffectsCard" Style="{StaticResource PerformanceCard}" Margin="0,0,0,24" Opacity="0">
+                <Border.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
+                        <SkewTransform/>
+                        <RotateTransform/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </Border.RenderTransform>
+                <StackPanel>
+                    <TextBlock x:Name="TxtVisualEffects" Text="🎨 Visual Effects" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Margin="0,0,0,20"/>
+
+                    <!-- Disable Animations -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtAnimations" Text="Disable Window Animations" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtAnimationsDesc" Text="Snappier UI, better performance" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkAnimations" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="#1A1F2E" Margin="0,0,0,20"/>
+
+                    <!-- Transparency -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtTransparency" Text="Disable Transparency Effects" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtTransparencyDesc" Text="Reduce GPU load, save resources" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkTransparency" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="#1A1F2E" Margin="0,0,0,20"/>
+
+                    <!-- Best Performance Mode -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtBestPerformance" Text="Adjust for Best Performance" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtBestPerformanceDesc" Text="Disable all visual effects for maximum speed" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkBestPerformance" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Network Optimization -->
+            <Border x:Name="NetworkCard" Style="{StaticResource PerformanceCard}" Margin="0,0,0,24" Opacity="0">
+                <Border.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
+                        <SkewTransform/>
+                        <RotateTransform/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </Border.RenderTransform>
+                <StackPanel>
+                    <TextBlock x:Name="TxtNetwork" Text="🌐 Network Optimization" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Margin="0,0,0,20"/>
+
+                    <!-- DNS Optimization -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtDNS" Text="Optimize DNS Settings" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtDNSDesc" Text="Use Cloudflare DNS (1.1.1.1) for faster internet" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkDNS" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="#1A1F2E" Margin="0,0,0,20"/>
+
+                    <!-- TCP Optimization -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtTCP" Text="TCP/IP Optimization" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtTCPDesc" Text="Optimize network stack for better throughput" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkTCP" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="#1A1F2E" Margin="0,0,0,20"/>
+
+                    <!-- Network Throttling -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtThrottle" Text="Disable Network Throttling" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtThrottleDesc" Text="Remove Windows bandwidth limitations" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkThrottle" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Gaming Optimization -->
+            <Border x:Name="GamingCard" Style="{StaticResource PerformanceCard}" Margin="0,0,0,24" Opacity="0">
+                <Border.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
+                        <SkewTransform/>
+                        <RotateTransform/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </Border.RenderTransform>
+                <StackPanel>
+                    <TextBlock x:Name="TxtGaming" Text="🎮 Gaming Optimization" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Margin="0,0,0,20"/>
+
+                    <!-- Hardware Accelerated GPU Scheduling -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtGPUScheduling" Text="Hardware Accelerated GPU Scheduling" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtGPUSchedulingDesc" Text="Reduce latency and improve FPS in games" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkGPUScheduling" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="#1A1F2E" Margin="0,0,0,20"/>
+
+                    <!-- Disable Fullscreen Optimizations -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtFullscreen" Text="Disable Fullscreen Optimizations" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtFullscreenDesc" Text="Better gaming performance and compatibility" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkFullscreen" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="#1A1F2E" Margin="0,0,0,20"/>
+
+                    <!-- MSI Mode -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="TxtMSI" Text="Enable MSI Mode for GPU" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                <Border Background="{StaticResource AccentOrange}" CornerRadius="4" Padding="6,2" Margin="10,0,0,0">
+                                    <TextBlock x:Name="TxtAdvanced" Text="ADVANCED" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                                </Border>
+                            </StackPanel>
+                            <TextBlock x:Name="TxtMSIDesc" Text="Message Signaled Interrupts for lower latency" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkMSI" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Memory & Storage -->
+            <Border x:Name="MemoryCard" Style="{StaticResource PerformanceCard}" Margin="0,0,0,24" Opacity="0">
+                <Border.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
+                        <SkewTransform/>
+                        <RotateTransform/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </Border.RenderTransform>
+                <StackPanel>
+                    <TextBlock x:Name="TxtMemory" Text="💾 Memory &amp; Storage" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Margin="0,0,0,20"/>
+
+                    <!-- Superfetch -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtSuperfetch" Text="Disable Superfetch/Prefetch" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtSuperfetchDesc" Text="Reduce disk usage on SSDs" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkSuperfetch" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="#1A1F2E" Margin="0,0,0,20"/>
+
+                    <!-- Page File -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtPageFile" Text="Optimize Virtual Memory" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtPageFileDesc" Text="Set optimal page file size for your RAM" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkPageFile" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="#1A1F2E" Margin="0,0,0,20"/>
+
+                    <!-- Disk Indexing -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtIndexing" Text="Disable Search Indexing" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtIndexingDesc" Text="Free up CPU and disk resources" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkIndexing" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="#1A1F2E" Margin="0,0,0,20"/>
+
+                    <!-- TRIM -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtTRIM" Text="Enable TRIM for SSD" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtTRIMDesc" Text="Maintain SSD performance and longevity" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkTRIM" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Privacy & Background Services -->
+            <Border x:Name="PrivacyCard" Style="{StaticResource PerformanceCard}" Margin="0,0,0,24" Opacity="0">
+                <Border.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
+                        <SkewTransform/>
+                        <RotateTransform/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </Border.RenderTransform>
+                <StackPanel>
+                    <TextBlock x:Name="TxtPrivacy" Text="🔒 Privacy &amp; Background Services" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Margin="0,0,0,20"/>
+
+                    <!-- Telemetry -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtTelemetry" Text="Disable Telemetry &amp; Data Collection" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtTelemetryDesc" Text="Stop Microsoft from collecting usage data" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkTelemetry" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="#1A1F2E" Margin="0,0,0,20"/>
+
+                    <!-- Background Apps -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtBackgroundApps" Text="Disable Background Apps" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtBackgroundAppsDesc" Text="Prevent apps from running in background" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkBackgroundApps" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="#1A1F2E" Margin="0,0,0,20"/>
+
+                    <!-- Cortana -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtCortana" Text="Disable Cortana" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtCortanaDesc" Text="Free up system resources" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkCortana" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="#1A1F2E" Margin="0,0,0,20"/>
+
+                    <!-- Windows Tips -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtTips" Text="Disable Windows Tips &amp; Suggestions" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtTipsDesc" Text="Remove annoying notifications and suggestions" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkTips" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Advanced Tweaks -->
+            <Border x:Name="AdvancedCard" Style="{StaticResource PerformanceCard}" Opacity="0">
+                <Border.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
+                        <SkewTransform/>
+                        <RotateTransform/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </Border.RenderTransform>
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                        <TextBlock x:Name="TxtAdvancedTweaks" Text="⚠️ Advanced Tweaks" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+                        <Border Background="{StaticResource AccentRed}" CornerRadius="4" Padding="6,2" Margin="12,0,0,0">
+                            <TextBlock x:Name="TxtCaution" Text="CAUTION" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- CPU Priority -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtCPUPriority" Text="Optimize CPU Priority for Games" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtCPUPriorityDesc" Text="Prioritize foreground applications" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkCPUPriority" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="#1A1F2E" Margin="0,0,0,20"/>
+
+                    <!-- Nagle's Algorithm -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtNagle" Text="Disable Nagle's Algorithm" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtNagleDesc" Text="Reduce online gaming latency" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkNagle" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="#1A1F2E" Margin="0,0,0,20"/>
+
+                    <!-- Timer Resolution -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtTimer" Text="High Precision Timer" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtTimerDesc" Text="Increase timer resolution for smoother gameplay" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkTimer" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="#1A1F2E" Margin="0,0,0,20"/>
+
+                    <!-- Core Parking -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtCoreParking" Text="Disable CPU Core Parking" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock x:Name="TxtCoreParkingDesc" Text="Keep all CPU cores active for maximum performance" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ChkCoreParking" Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

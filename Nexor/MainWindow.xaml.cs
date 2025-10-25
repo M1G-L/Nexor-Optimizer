@@ -121,6 +121,7 @@ namespace Nexor
             BtnDashboard.Tag = "Normal";
             BtnProcesses.Tag = "Normal";
             BtnCleanup.Tag = "Normal";
+            BtnPerformance.Tag = "Normal";
             BtnFreshSetup.Tag = "Normal";
 
             // Set selected button
@@ -574,6 +575,28 @@ namespace Nexor
             if (MainContentFrame != null)
             {
                 MainContentFrame.Visibility = Visibility.Collapsed;
+            }
+        }
+        private void BtnPerformance_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                SetSelectedMenuItem(BtnPerformance);
+                var performancePage = new PerformancePage(_currentLanguage);
+                if (MainContentFrame != null)
+                {
+                    MainContentFrame.Navigate(performancePage);
+                    MainContentFrame.Visibility = Visibility.Visible;
+                }
+                if (DashboardContent != null)
+                {
+                    DashboardContent.Visibility = Visibility.Collapsed;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading Performance page: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
